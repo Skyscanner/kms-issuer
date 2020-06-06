@@ -1,0 +1,10 @@
+resources:
+- manager.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+images:
+- name: controller
+  newName: skyscanner/kms-issuer
+  newTag: latest
+- name: controller=chaudyg/kms=issuer
+  newTag: latest

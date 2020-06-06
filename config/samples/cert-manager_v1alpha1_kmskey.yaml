@@ -1,0 +1,12 @@
+apiVersion: cert-manager.skyscanner.net/v1alpha1
+kind: KMSKey
+metadata:
+  name: kmskey-sample
+spec:
+  aliasName: alias/kms-issuer-example
+  description: a kms-issuer example kms key
+  customerMasterKeySpec: RSA_2048
+  tags:
+    project: kms-issuer
+  deletionPolicy: Delete
+  deletionPendingWindowInDays: 7

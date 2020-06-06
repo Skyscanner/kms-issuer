@@ -1,0 +1,10 @@
+domain: skyscanner.net
+repo: github.com/Skyscanner/kms-issuer
+resources:
+- group: cert-manager
+  kind: KMSIssuer
+  version: v1alpha1
+- group: cert-manager
+  kind: KMSKey
+  version: v1alpha1
+version: "2"

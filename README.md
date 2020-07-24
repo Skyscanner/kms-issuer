@@ -133,6 +133,10 @@ For any details on Cert-Manager, check the [official documentation](https://cert
   kubectl get secret example-com-tls
   ```
 
-### Contributing
+## Contributing
 
-Kms-Issuer is built using the [Kubebuilder](https://book.kubebuilder.io/) framework. See the [official documentation](https://book.kubebuilder.io/quick-start.html) to get started.
+Check [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Security
+
+Check [SECURITY.md](SECURITY.md).

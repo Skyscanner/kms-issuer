@@ -1,0 +1,39 @@
+default_stages: [commit]
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.1.0
+    hooks:
+      - id: check-yaml
+        args:
+          - --allow-multiple-documents
+      - id: check-toml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+  # - repo: https://github.com/golangci/golangci-lint
+  #   rev: v1.29.0
+  #   hooks:
+  #     - id: golangci-lint
+    files: '.*\.go$'
+  - repo: local
+    hooks:
+      - id: fmt
+        name: Run go fmt
+        entry: make fmt
+        language: system
+        require_serial: true
+        files: '.*\.go$'
+        stages:
+          - push
+      - id: test
+        name: Run tests
+        entry: make test
+        language: system
+        require_serial: true
+        files: '.*\.go$'
+        stages:
+          - push
+      - id: travis
+        name: Run travis lint
+        entry: travis lint
+        language: system
+        files: '\.travis\.yml$'

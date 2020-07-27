@@ -40,6 +40,10 @@ If you are adding a new file it should have a header like this:
 - [`go`](https://golang.org/)
 - [`kustomize`](https://kustomize.io/)
 - [`kind`](https://kind.sigs.k8s.io/) - for testing
+- [`pre-commit`](https://pre-commit.com/)
+- [`golangci-lint`](https://golangci-lint.run/)
+- [`travis CLI`](https://github.com/travis-ci/travis.rb#readme) - for validating changes to `.travis.yml` config file
+- [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 
 ## Testing
 

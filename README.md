@@ -1,6 +1,8 @@
 
 # KMS Issuer
 
+[![Build Status](https://travis-ci.org/Skyscanner/kms-issuer.svg?branch=master)](https://travis-ci.org/Skyscanner/kms-issuer)
+
 KMS issuer is a [cert-manager](https://cert-manager.io/) Certificate Request controller that uses [AWS KMS](https://aws.amazon.com/kms/) to sign the certificate request.
 
 ## Getting started

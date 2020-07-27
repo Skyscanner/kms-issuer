@@ -1,0 +1,49 @@
+language: go
+dist: bionic
+go:
+- '1.14.x'
+
+services:
+  - docker
+
+env:
+  global:
+    - CGO_ENABLED=0
+    - GO111MODULE="on"
+    - GOLANGCI_LINT_VER=1.29.0
+    - GOLANGCI_LINT_SHA256=12508dff3b53c3d5ff75947c6ef124de5dc4f057fdf935f369abe20f842a7cfe
+    - KIND_VER=v0.8.1
+    - KIND_SHA256=781c3db479b805d161b7c2c7a31896d1a504b583ebfcce8fcd49538c684d96bc
+    - KUBECTL_VER=v1.18.6
+    - KUBECTL_SHA256=62fcb9922164725c7cba5747562f2ad2f4d834ad0a458c1e4c794cc203dcdfb3
+    - KUSTOMIZE_VER=v3.8.1
+    - KUSTOMIZE_SHA256=9d5b68f881ba89146678a0399469db24670cba4813e0299b47cb39a240006f37
+
+before_install:
+  # kind
+  - curl -Lo /tmp/kind "https://kind.sigs.k8s.io/dl/${KIND_VER}/kind-linux-amd64"
+  - "[[ $(shasum -a 256 /tmp/kind | awk '{print $1}') == ${KIND_SHA256} ]]"
+  - sudo mv /tmp/kind /usr/local/bin/kind && sudo chmod +x /usr/local/bin/kind
+  # kubectl
+  - curl -Lo /tmp/kubectl "https://storage.googleapis.com/kubernetes-release/release/${KUBECTL_VER}/bin/linux/amd64/kubectl"
+  - "[[ $(shasum -a 256 /tmp/kubectl | awk '{print $1}') == ${KUBECTL_SHA256} ]]"
+  - sudo mv /tmp/kubectl /usr/local/bin/kubectl && sudo chmod +x /usr/local/bin/kubectl
+  # kustomize
+  - curl -Lo /tmp/kustomize.tar.gz "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F${KUSTOMIZE_VER}/kustomize_${KUSTOMIZE_VER}_linux_amd64.tar.gz"
+  - "[[ $(shasum -a 256 /tmp/kustomize.tar.gz | awk '{print $1}') == ${KUSTOMIZE_SHA256} ]]"
+  - tar -zxvf /tmp/kustomize.tar.gz
+  - sudo mv kustomize /usr/local/bin/kustomize
+  # golangci-lint
+  - curl -Lo /tmp/golangci-lint.deb "https://github.com/golangci/golangci-lint/releases/download/v${GOLANGCI_LINT_VER}/golangci-lint-${GOLANGCI_LINT_VER}-linux-amd64.deb"
+  - "[[ $(shasum -a 256 /tmp/golangci-lint.deb | awk '{print $1}') == ${GOLANGCI_LINT_SHA256} ]]"
+  - sudo apt install -y /tmp/golangci-lint.deb
+
+install:
+  - go mod download
+
+before_script:
+ - make test
+
+script:
+  - make manager
+  - make docker-build

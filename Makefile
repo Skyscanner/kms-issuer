@@ -22,11 +22,11 @@ test: generate tidy fmt vet manifests
 	kind delete cluster --name kms-issuer-test
 
 # Build manager binary
-manager: generate tidy fmt vet
+manager: generate tidy fmt lint
 	go build -o bin/manager main.go
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
-run: generate tidy fmt vet manifests
+run: generate tidy fmt lint manifests
 	go run ./main.go
 
 # Install CRDs into a cluster
@@ -60,12 +60,16 @@ fmt:
 vet:
 	go vet ./...
 
+# Run golangci-lint agaist code
+lint: vet
+	# golangci-lint run --fix
+
 # Generate code
 generate: controller-gen
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 # Build the docker image
-docker-build: test
+docker-build:
 	docker build . -t ${IMG}
 
 # Push the docker image

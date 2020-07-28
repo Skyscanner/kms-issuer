@@ -6,10 +6,8 @@ repos:
       - id: check-yaml
         args:
           - --allow-multiple-documents
-      - id: check-toml
       - id: end-of-file-fixer
       - id: trailing-whitespace
-    files: '.*\.go$'
   - repo: local
     hooks:
       - id: fmt
@@ -33,3 +31,5 @@ repos:
         entry: travis lint
         language: system
         files: '\.travis\.yml$'
+        stages:
+          - push

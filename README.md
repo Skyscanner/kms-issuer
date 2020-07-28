@@ -137,7 +137,7 @@ For any details on Cert-Manager, check the [official documentation](https://cert
 
 ## Contributing
 
-Check [CONTRIBUTING.md](CONTRIBUTING.md).
+Kms-Issuer is built using the [Kubebuilder](https://book.kubebuilder.io/) framework. See the [official documentation](https://book.kubebuilder.io/quick-start.html) to get started and check [CONTRIBUTING.md](CONTRIBUTING.md) for more details.
 
 ## Security
 

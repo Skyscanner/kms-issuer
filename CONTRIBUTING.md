@@ -34,13 +34,13 @@ If you are adding a new file it should have a header like this:
 
 ## Dependencies
 
+- [`pre-commit`](https://pre-commit.com/) - required for automated local checks and linting
 - [`make`](https://www.gnu.org/software/make/)
-- [`kubebuilder`](https://github.com/kubernetes-sigs/kubebuilder) - Kms-Issuer was built using the [Kubebuilder](https://book.kubebuilder.io/) framework. See the [official documentation](https://book.kubebuilder.io/quick-start.html) to get started.
+- [`kubebuilder`](https://github.com/kubernetes-sigs/kubebuilder) - Kms-Issuer was built using the [Kubebuilder](https://book.kubebuilder.io/) framework, see the [official documentation](https://book.kubebuilder.io/quick-start.html) to get started
 - [`Docker`](https://www.docker.com/)
 - [`go`](https://golang.org/)
 - [`kustomize`](https://kustomize.io/)
 - [`kind`](https://kind.sigs.k8s.io/) - for testing
-- [`pre-commit`](https://pre-commit.com/)
 - [`golangci-lint`](https://golangci-lint.run/)
 - [`travis CLI`](https://github.com/travis-ci/travis.rb#readme) - for validating changes to `.travis.yml` config file
 - [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/)

@@ -17,9 +17,13 @@ all: manager
 
 # Run tests
 test: generate tidy fmt vet manifests
+ifeq ($(USE_EXISTING_CLUSTER), "true")
 	kind create cluster --name kms-issuer-test && \
-	USE_EXISTING_CLUSTER=$(USE_EXISTING_CLUSTER) go test ./... -coverprofile cover.out
+		USE_EXISTING_CLUSTER=$(USE_EXISTING_CLUSTER) go test ./... -coverprofile cover.out
 	kind delete cluster --name kms-issuer-test
+else
+	go test ./... -coverprofile cover.out
+endif
 
 # Build manager binary
 manager: generate tidy fmt lint
@@ -60,7 +64,7 @@ fmt:
 vet:
 	go vet ./...
 
-# Run golangci-lint agaist code
+# Run golangci-lint against code
 lint: vet
 	# golangci-lint run --fix
 

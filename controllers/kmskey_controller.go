@@ -133,11 +133,11 @@ func (r *KMSKeyReconciler) manageSuccess(ctx context.Context, log logr.Logger, k
 }
 
 // manageFailure
-func (r *KMSKeyReconciler) manageFailure(ctx context.Context, log logr.Logger, kmskey *kmsiapi.KMSKey, issue error, message string) error {
+func (r *KMSKeyReconciler) manageFailure(ctx context.Context, log logr.Logger, kmskey *kmsiapi.KMSKey, issue error, msg string) error {
 	reason := kmsiapi.KMSKeyReasonFailed
-	log.Error(issue, message)
-	r.Recorder.Event(kmskey, core.EventTypeWarning, reason, message)
-	ready := kmsiapi.NewCondition(kmsiapi.ConditionReady, kmsiapi.ConditionFalse, reason, message)
+	log.Error(issue, msg)
+	r.Recorder.Event(kmskey, core.EventTypeWarning, reason, msg)
+	ready := kmsiapi.NewCondition(kmsiapi.ConditionReady, kmsiapi.ConditionFalse, reason, msg)
 	kmskey.Status.SetCondition(&ready)
 	return r.Client.Status().Update(ctx, kmskey)
 }

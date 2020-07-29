@@ -21,7 +21,7 @@ import (
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialised.
 
 // Condition reasons
 const (
@@ -37,7 +37,7 @@ type KMSIssuerSpec struct {
 	// deletion. When unspecified, a RSA 2048 key is created and managed by
 	// the operator.
 	// +optional
-	KeyId string `json:"keyId,omitempty"`
+	KeyID string `json:"keyId,omitempty"`
 
 	// CommonName is a common name to be used on the Certificate.
 	// The CommonName should have a length of 64 characters or fewer to avoid

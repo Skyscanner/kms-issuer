@@ -33,11 +33,15 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms/kmsiface"
 )
 
-// KMSCA KMS Certificate Authority provides the API operation methods for implementating
+// KMSCA KMS Certificate Authority provides the API operation methods for implementation
 // a certificate authority on top of AWS KMS.
 type KMSCA struct {
 	Client kmsiface.KMSAPI
 }
+
+var (
+	caSerialNumber = big.NewInt(2020) //nolint:gomnd // static serial number
+)
 
 // NewKMSCA creates a new instance of the KMSCA client with a session.
 // If additional configuration is needed for the client instance use the optional
@@ -50,7 +54,7 @@ func NewKMSCA(p client.ConfigProvider, cfgs ...*aws.Config) *KMSCA {
 
 // CreateKey creates an asymetric KMS key used to sign certificates and a KMS Alias pointing at the key.
 // The method only creates the key if the alias hasn't yet been created.
-// Returns the KeyId string
+// Returns the KeyID string
 func (ca *KMSCA) CreateKey(input *CreateKeyInput) (string, error) {
 	// Check if the key already exists
 	response, err := ca.Client.DescribeKey(&kms.DescribeKeyInput{
@@ -131,7 +135,7 @@ func (ca *KMSCA) DeleteKey(input *DeleteKeyInput) error {
 // GenerateCertificateAuthorityCertificate returns the signed Certificate Authority Certificate
 func (ca *KMSCA) GenerateCertificateAuthorityCertificate(input *GenerateCertificateAuthorityCertificateInput) (*x509.Certificate, error) {
 	cert := &x509.Certificate{
-		SerialNumber:          big.NewInt(2020),
+		SerialNumber:          caSerialNumber,
 		Subject:               input.Subject,
 		NotBefore:             input.NotBefore,
 		NotAfter:              input.NotAfter,
@@ -140,12 +144,12 @@ func (ca *KMSCA) GenerateCertificateAuthorityCertificate(input *GenerateCertific
 		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
 		BasicConstraintsValid: true,
 	}
-	signer := signer.New(ca.Client, input.KeyId)
-	pub := signer.Public()
+	newSigner := signer.New(ca.Client, input.KeyID)
+	pub := newSigner.Public()
 	if pub == nil {
-		return nil, fmt.Errorf("Could not retrieve the public key associated with the KMS private key")
+		return nil, fmt.Errorf("could not retrieve the public key associated with the KMS private key")
 	}
-	signedBytes, err := x509.CreateCertificate(rand.Reader, cert, cert, pub, signer)
+	signedBytes, err := x509.CreateCertificate(rand.Reader, cert, cert, pub, newSigner)
 	if err != nil {
 		return nil, err
 	}
@@ -154,8 +158,8 @@ func (ca *KMSCA) GenerateCertificateAuthorityCertificate(input *GenerateCertific
 
 // SignCertificate Signs a certificate request using KMS.
 func (ca *KMSCA) SignCertificate(input *IssueCertificateInput) (*x509.Certificate, error) {
-	signer := signer.New(ca.Client, input.KeyId)
-	signedBytes, err := x509.CreateCertificate(rand.Reader, input.Cert, input.Parent, input.PublicKey, signer)
+	newSigner := signer.New(ca.Client, input.KeyID)
+	signedBytes, err := x509.CreateCertificate(rand.Reader, input.Cert, input.Parent, input.PublicKey, newSigner)
 	if err != nil {
 		return nil, err
 	}
@@ -189,12 +193,12 @@ type DeleteKeyInput struct {
 }
 
 type Key struct {
-	// KeyId is the KMS Key Id
-	KeyId string
+	// KeyID is the KMS Key Id
+	KeyID string
 }
 type GenerateCertificateAuthorityCertificateInput struct {
-	// KeyId is the KMS Key Id
-	KeyId string
+	// KeyID is the KMS Key Id
+	KeyID string
 	// Subject of the CA certifiacte
 	Subject pkix.Name
 	// NotBefore is the time at which the certificate validity starts
@@ -204,8 +208,8 @@ type GenerateCertificateAuthorityCertificateInput struct {
 }
 
 type IssueCertificateInput struct {
-	// KeyId is the KMS Key Id
-	KeyId string
+	// KeyID is the KMS Key Id
+	KeyID string
 	// CSR Certificate Request
 	Cert *x509.Certificate
 	// PublicKey

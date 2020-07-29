@@ -46,7 +46,7 @@ var _ = Context("KMSIssuer", func() {
 	Describe("when a new resources is created", func() {
 		It("should sign the intermediate certificate", func() {
 			By("Creating a KMS Key")
-			keyId, err := ca.CreateKey(&kmsca.CreateKeyInput{
+			keyID, err := ca.CreateKey(&kmsca.CreateKeyInput{
 				AliasName: "alias/test-key",
 			})
 			Expect(err).To(BeNil())
@@ -62,7 +62,7 @@ var _ = Context("KMSIssuer", func() {
 					Namespace: key.Namespace,
 				},
 				Spec: kmsiapi.KMSIssuerSpec{
-					KeyId:      keyId,
+					KeyID:      keyID,
 					CommonName: "RootCA",
 					Duration:   &metav1.Duration{},
 				},

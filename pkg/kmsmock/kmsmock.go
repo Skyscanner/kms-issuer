@@ -57,7 +57,7 @@ type KMSMock struct {
 	alias map[string]string
 }
 
-//New creates a new KMSMock instance
+// New creates a new KMSMock instance
 func New() *KMSMock {
 	return &KMSMock{
 		keys:  map[string]*kms.CreateKeyInput{},
@@ -94,17 +94,17 @@ func (m *KMSMock) DeleteAlias(input *kms.DeleteAliasInput) (*kms.DeleteAliasOutp
 // DescribeKey mocks of the KMS DescribeKey method.
 // Returns a valid DescribeKeyOutput response
 func (m *KMSMock) DescribeKey(input *kms.DescribeKeyInput) (*kms.DescribeKeyOutput, error) {
-	keyId := aws.StringValue(input.KeyId)
+	keyID := aws.StringValue(input.KeyId)
 	// fetch key id from alias
-	if strings.HasPrefix(keyId, "alias/") {
-		keyId = m.alias[keyId]
-		if len(keyId) == 0 {
+	if strings.HasPrefix(keyID, "alias/") {
+		keyID = m.alias[keyID]
+		if keyID == "" {
 			return nil, &kms.NotFoundException{}
 		}
 	}
 	return &kms.DescribeKeyOutput{
 		KeyMetadata: &kms.KeyMetadata{
-			KeyId: aws.String(keyId),
+			KeyId: aws.String(keyID),
 		},
 	}, nil
 }
@@ -130,7 +130,7 @@ func (m *KMSMock) ScheduleKeyDeletion(input *kms.ScheduleKeyDeletionInput) (*kms
 // GetPublicKey mocks of the KMS GetPublicKey method.
 func (m *KMSMock) GetPublicKey(input *kms.GetPublicKeyInput) (*kms.GetPublicKeyOutput, error) {
 	if key, ok := m.keys[aws.StringValue(input.KeyId)]; ok {
-		block, _ := pem.Decode([]byte(publicKey))
+		block, _ := pem.Decode(publicKey)
 		return &kms.GetPublicKeyOutput{
 			CustomerMasterKeySpec: key.CustomerMasterKeySpec,
 			KeyUsage:              key.KeyUsage,

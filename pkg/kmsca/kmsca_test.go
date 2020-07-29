@@ -40,7 +40,7 @@ var _ = Context("KMSCA", func() {
 
 		It("should create a new KMS key and a Key Alias", func() {
 			client := mockKMSCA()
-			KeyId, err := client.CreateKey(&kmsca.CreateKeyInput{
+			KeyID, err := client.CreateKey(&kmsca.CreateKeyInput{
 				AliasName: "alias/test-key",
 				Tags: map[string]string{
 					"Project": "k8s",
@@ -51,31 +51,31 @@ var _ = Context("KMSCA", func() {
 				Policy:                "{}",
 			})
 			Expect(err).To(BeNil())
-			Expect(KeyId).NotTo(BeEmpty())
+			Expect(KeyID).NotTo(BeEmpty())
 		})
 
 		It("should return existing key if one already exists", func() {
 			client := mockKMSCA()
-			KeyId, err := client.CreateKey(&kmsca.CreateKeyInput{
+			KeyID, err := client.CreateKey(&kmsca.CreateKeyInput{
 				AliasName: "alias/test-key",
 			})
 			Expect(err).To(BeNil())
-			KeyId2, err := client.CreateKey(&kmsca.CreateKeyInput{
+			KeyID2, err := client.CreateKey(&kmsca.CreateKeyInput{
 				AliasName: "alias/test-key",
 			})
 			Expect(err).To(BeNil())
-			Expect(KeyId).To(Equal(KeyId2))
+			Expect(KeyID).To(Equal(KeyID2))
 		})
 	})
 	Describe("when calling DeleteKey", func() {
 
 		It("should delete the KMS key and a Key Alias", func() {
 			client := mockKMSCA()
-			KeyId, err := client.CreateKey(&kmsca.CreateKeyInput{
+			KeyID, err := client.CreateKey(&kmsca.CreateKeyInput{
 				AliasName: "alias/test-key",
 			})
 			Expect(err).To(BeNil())
-			Expect(KeyId).NotTo(BeEmpty())
+			Expect(KeyID).NotTo(BeEmpty())
 
 			err = client.DeleteKey(&kmsca.DeleteKeyInput{
 				AliasName: "alias/test-key",
@@ -93,13 +93,13 @@ var _ = Context("KMSCA", func() {
 		It("should return a valid ca cert", func() {
 			By("creating a managed key")
 			client := mockKMSCA()
-			KeyId, err := client.CreateKey(&kmsca.CreateKeyInput{
+			KeyID, _ := client.CreateKey(&kmsca.CreateKeyInput{
 				AliasName: "alias/test-key",
 			})
 
 			By("calling GenerateCertificateAuthorityCertificate")
 			signed, err := client.GenerateCertificateAuthorityCertificate(&kmsca.GenerateCertificateAuthorityCertificateInput{
-				KeyId: KeyId,
+				KeyID: KeyID,
 				Subject: pkix.Name{
 					CommonName: "Test CA",
 				},
@@ -118,13 +118,13 @@ var _ = Context("KMSCA", func() {
 		It("should return a signed certificate", func() {
 			By("creating a managed key")
 			client := mockKMSCA()
-			keyId, err := client.CreateKey(&kmsca.CreateKeyInput{
+			keyID, _ := client.CreateKey(&kmsca.CreateKeyInput{
 				AliasName: "alias/test-key",
 			})
 
 			By("calling GenerateCertificateAuthorityCertificate")
-			parent, err := client.GenerateCertificateAuthorityCertificate(&kmsca.GenerateCertificateAuthorityCertificateInput{
-				KeyId: keyId,
+			parent, _ := client.GenerateCertificateAuthorityCertificate(&kmsca.GenerateCertificateAuthorityCertificateInput{
+				KeyID: keyID,
 				Subject: pkix.Name{
 					CommonName: "Test CA",
 				},
@@ -150,12 +150,12 @@ var _ = Context("KMSCA", func() {
 				ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
 				KeyUsage:     x509.KeyUsageDigitalSignature,
 			}
-			certPrivKey, err := rsa.GenerateKey(rand.Reader, 2048)
+			certPrivKey, _ := rsa.GenerateKey(rand.Reader, 2048)
 
 			By("signing the certificate")
 
 			signed, err := client.SignCertificate(&kmsca.IssueCertificateInput{
-				KeyId:     keyId,
+				KeyID:     keyID,
 				Cert:      cert,
 				Parent:    parent,
 				PublicKey: certPrivKey.Public(),

@@ -27,7 +27,6 @@ import (
 
 	kmsiapi "github.com/Skyscanner/kms-issuer/api/v1alpha1"
 	"github.com/Skyscanner/kms-issuer/pkg/kmsca"
-	"github.com/aws/aws-sdk-go/service/kms/kmsiface"
 	"github.com/go-logr/logr"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -36,8 +35,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
-
-var kmsApi kmsiface.KMSAPI
 
 // KMSIssuerReconciler reconciles a KMSIssuer object.
 type KMSIssuerReconciler struct {
@@ -75,15 +72,15 @@ func (r *KMSIssuerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	// validation
-	if len(issuer.Spec.KeyId) == 0 {
-		return ctrl.Result{}, r.manageFailure(ctx, log, issuer, errors.New("INVALID KeyId"), fmt.Sprintf("Not a valid key: %s", issuer.Spec.KeyId))
+	if issuer.Spec.KeyID == "" {
+		return ctrl.Result{}, r.manageFailure(ctx, log, issuer, errors.New("INVALID KeyId"), fmt.Sprintf("Not a valid key: %s", issuer.Spec.KeyID))
 	}
 
 	// Generate ca certificate
 	if len(issuer.Status.Certificate) == 0 {
 		log.Info("generate certificate")
 		cert, err := r.KMSCA.GenerateCertificateAuthorityCertificate(&kmsca.GenerateCertificateAuthorityCertificateInput{
-			KeyId: issuer.Spec.KeyId,
+			KeyID: issuer.Spec.KeyID,
 			Subject: pkix.Name{
 				CommonName: issuer.Spec.CommonName,
 			},
@@ -112,13 +109,11 @@ func (r *KMSIssuerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 func (r *KMSIssuerReconciler) manageSuccess(ctx context.Context, log logr.Logger, issuer *kmsiapi.KMSIssuer) error {
 	reason := kmsiapi.KMSIssuerReasonIssued
 	msg := ""
-	log.Info("successfuly reconciled issuer")
+	log.Info("successfully reconciled issuer")
 	r.Recorder.Event(issuer, core.EventTypeNormal, reason, msg)
-	issuer.Status.SetCondition(kmsiapi.NewCondition(kmsiapi.ConditionReady, kmsiapi.ConditionTrue, reason, msg))
-	if err := r.Client.Status().Update(ctx, issuer); err != nil {
-		return err
-	}
-	return nil
+	ready := kmsiapi.NewCondition(kmsiapi.ConditionReady, kmsiapi.ConditionTrue, reason, msg)
+	issuer.Status.SetCondition(&ready)
+	return r.Client.Status().Update(ctx, issuer)
 }
 
 // manageFailure
@@ -126,9 +121,7 @@ func (r *KMSIssuerReconciler) manageFailure(ctx context.Context, log logr.Logger
 	reason := kmsiapi.KMSIssuerReasonFailed
 	log.Error(issue, message)
 	r.Recorder.Event(issuer, core.EventTypeWarning, reason, message)
-	issuer.Status.SetCondition(kmsiapi.NewCondition(kmsiapi.ConditionReady, kmsiapi.ConditionFalse, reason, message))
-	if err := r.Client.Status().Update(ctx, issuer); err != nil {
-		return err
-	}
-	return nil
+	ready := kmsiapi.NewCondition(kmsiapi.ConditionReady, kmsiapi.ConditionFalse, reason, message)
+	issuer.Status.SetCondition(&ready)
+	return r.Client.Status().Update(ctx, issuer)
 }

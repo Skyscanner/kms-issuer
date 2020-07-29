@@ -102,13 +102,12 @@ func (status *Status) GetCondition(condType ConditionType) *Condition {
 
 // SetCondition adds/replaces the given condition in the KMSIssuer status. If the condition that we
 // are about to add already exists and has the same status and reason then we are not going to update.
-func (status *Status) SetCondition(condition Condition) {
+func (status *Status) SetCondition(condition *Condition) {
 	currentCond := status.GetCondition(condition.Type)
 	if currentCond != nil && currentCond.Status == condition.Status && currentCond.Reason == condition.Reason {
 		return
 	}
-	newConditions := status.filterOutCondition(condition.Type)
-	status.Conditions = append(newConditions, condition)
+	status.Conditions = append(status.filterOutCondition(condition.Type), *condition)
 }
 
 // RemoveCondition removes the condition with the provided type from the replicaset status.

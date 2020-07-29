@@ -22,8 +22,8 @@ import (
 
 var (
 	// ErrCodeNotFoundException The request was rejected because the specified entity or resource could not be found.
-	ErrCodeNotFoundException = errors.New("NotFoundException")
+	ErrCodeNotFoundException = errors.New("notFoundException")
 
 	// ErrUnknownKeyType The type of the of the public key is unknown.
-	ErrUnknownKeyType = errors.New("UnknownKeyType")
+	ErrUnknownKeyType = errors.New("unknownKeyType")
 )

@@ -37,6 +37,7 @@ import (
 var (
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
+	port     = 9443
 )
 
 func init() {
@@ -60,7 +61,7 @@ func main() {
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:             scheme,
 		MetricsBindAddress: metricsAddr,
-		Port:               9443,
+		Port:               port,
 		LeaderElection:     enableLeaderElection,
 		LeaderElectionID:   "8655c165.skyscanner.net",
 	})

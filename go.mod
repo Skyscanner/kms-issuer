@@ -1,6 +1,6 @@
 module github.com/Skyscanner/kms-issuer
 
-go 1.13
+go 1.14
 
 require (
 	cloud.google.com/go v0.51.0 // indirect
@@ -23,7 +23,6 @@ require (
 	golang.org/x/sys v0.0.0-20200117145432-59e60aa80a0c // indirect
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
 	golang.org/x/tools v0.0.0-20200106190116-7be0a674c9fc // indirect
-	istio.io/pkg v0.0.0-20200707142905-c70e29a7ce22
 	k8s.io/api v0.18.1
 	k8s.io/apimachinery v0.18.1
 	k8s.io/client-go v0.18.0

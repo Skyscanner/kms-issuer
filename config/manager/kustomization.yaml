@@ -5,6 +5,6 @@ kind: Kustomization
 images:
 - name: controller
   newName: skyscanner/kms-issuer
-  newTag: latest
+  newTag: dev
 - name: controller=chaudyg/kms=issuer
   newTag: latest

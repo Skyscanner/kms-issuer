@@ -1,6 +1,8 @@
 
 # KMS Issuer
 
+[![Build Status](https://travis-ci.org/Skyscanner/kms-issuer.svg?branch=master)](https://travis-ci.org/Skyscanner/kms-issuer)
+
 KMS issuer is a [cert-manager](https://cert-manager.io/) Certificate Request controller that uses [AWS KMS](https://aws.amazon.com/kms/) to sign the certificate request.
 
 ## Getting started
@@ -133,6 +135,10 @@ For any details on Cert-Manager, check the [official documentation](https://cert
   kubectl get secret example-com-tls
   ```
 
-### Contributing
+## Contributing
 
-Kms-Issuer is built using the [Kubebuilder](https://book.kubebuilder.io/) framework. See the [official documentation](https://book.kubebuilder.io/quick-start.html) to get started.
+Kms-Issuer is built using the [Kubebuilder](https://book.kubebuilder.io/) framework. See the [official documentation](https://book.kubebuilder.io/quick-start.html) to get started and check [CONTRIBUTING.md](CONTRIBUTING.md) for more details.
+
+## Security
+
+Check [SECURITY.md](SECURITY.md).

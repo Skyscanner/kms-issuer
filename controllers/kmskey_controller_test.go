@@ -86,7 +86,7 @@ var _ = Context("KMSKey", func() {
 			By("Checking the finalizer has been set")
 			Expect(NeedToAddFinalizer(kmsKey)).To(BeFalse())
 			By("Checking the Status.KeyId has been set")
-			Expect(kmsKey.Status.KeyId).NotTo(BeEmpty())
+			Expect(kmsKey.Status.KeyID).NotTo(BeEmpty())
 		})
 	})
 

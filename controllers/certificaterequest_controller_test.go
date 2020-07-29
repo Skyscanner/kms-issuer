@@ -37,7 +37,7 @@ var _ = Context("CertificateRequestReconciler", func() {
 	Describe("when a new CertificateRequest is created", func() {
 		It("should sign the certificate request", func() {
 			By("Creating a KMSIssuer")
-			keyId, err := ca.CreateKey(&kmsca.CreateKeyInput{
+			keyID, err := ca.CreateKey(&kmsca.CreateKeyInput{
 				AliasName: "alias/test-key",
 			})
 			Expect(err).To(BeNil())
@@ -51,7 +51,7 @@ var _ = Context("CertificateRequestReconciler", func() {
 					Namespace: issuerKey.Namespace,
 				},
 				Spec: kmsiapi.KMSIssuerSpec{
-					KeyId:      keyId,
+					KeyID:      keyID,
 					CommonName: "RootCA",
 					Duration:   &metav1.Duration{},
 				},
@@ -77,7 +77,7 @@ var _ = Context("CertificateRequestReconciler", func() {
 				[]byte{1, 1, 1, 1},
 			}
 			exampleURIs := []string{"spiffe://foo.foo.example.net", "spiffe://foo.bar.example.net"}
-			cr, _, err := util.NewCertManagerBasicCertificateRequest(
+			cr, _, err := util.NewCertManagerBasicCertificateRequest( //nolint:staticcheck // TODO: fixed when refactored
 				crKey.Name, issuerKey.Name, "KMSIssuer",
 				&metav1.Duration{
 					Duration: time.Hour * 24 * 90,

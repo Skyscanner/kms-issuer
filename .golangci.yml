@@ -40,8 +40,6 @@ linters-settings:
     check-shadowing: true
   maligned:
     suggest-new: true
-  misspell:
-    locale: UK
 
 linters:
   disable-all: true

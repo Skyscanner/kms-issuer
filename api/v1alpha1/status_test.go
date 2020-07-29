@@ -39,48 +39,52 @@ var _ = Describe("Status", func() {
 		Describe("SetCondition", func() {
 			It("should add a new conditions", func() {
 				status := &Status{}
-				condition := NewCondition(ConditionReady, ConditionFalse, KMSIssuerReasonFailed, "oups")
-				status.SetCondition(condition)
-				Expect(status.Conditions[0]).To(Equal(condition))
+				oups := NewCondition(ConditionReady, ConditionFalse, KMSIssuerReasonFailed, "oups")
+				status.SetCondition(&oups)
+				Expect(status.Conditions[0]).To(Equal(oups))
 				Expect(len(status.Conditions)).To(Equal(1))
 			})
 
 			It("should replace a pre-existing conditions", func() {
 				status := &Status{}
-				status.SetCondition(NewCondition(ConditionReady, ConditionTrue, KMSIssuerReasonIssued, ""))
-				condition := NewCondition(ConditionReady, ConditionFalse, KMSIssuerReasonFailed, "oups")
-				status.SetCondition(condition)
-				Expect(status.Conditions[0]).To(Equal(condition))
+				empty := NewCondition(ConditionReady, ConditionTrue, KMSIssuerReasonIssued, "")
+				status.SetCondition(&empty)
+				oups := NewCondition(ConditionReady, ConditionFalse, KMSIssuerReasonFailed, "oups")
+				status.SetCondition(&oups)
+				Expect(status.Conditions[0]).To(Equal(oups))
 				Expect(len(status.Conditions)).To(Equal(1))
 			})
 
 			It("should not update the condition if it already exists and has the same status and reason.", func() {
 				status := &Status{}
-				condition := NewCondition(ConditionReady, ConditionFalse, KMSIssuerReasonFailed, "because")
-				status.SetCondition(condition)
-				status.SetCondition(NewCondition(ConditionReady, ConditionFalse, KMSIssuerReasonFailed, "othermsg"))
-				Expect(status.Conditions[0]).To(Equal(condition))
+				because := NewCondition(ConditionReady, ConditionFalse, KMSIssuerReasonFailed, "because")
+				status.SetCondition(&because)
+				otherMsg := NewCondition(ConditionReady, ConditionFalse, KMSIssuerReasonFailed, "othermsg")
+				status.SetCondition(&otherMsg)
+				Expect(status.Conditions[0]).To(Equal(because))
 				Expect(len(status.Conditions)).To(Equal(1))
 			})
 		})
 		Describe("GetCondition", func() {
 			It("should return a condition by type", func() {
 				status := &Status{}
-				condition := NewCondition(ConditionReady, ConditionTrue, KMSIssuerReasonIssued, "")
-				status.SetCondition(condition)
-				Expect(*status.GetCondition(ConditionReady)).To(Equal(condition))
+				empty := NewCondition(ConditionReady, ConditionTrue, KMSIssuerReasonIssued, "")
+				status.SetCondition(&empty)
+				Expect(*status.GetCondition(ConditionReady)).To(Equal(empty))
 			})
 		})
 		Describe("IsReady", func() {
 			It("should return true when the Ready Condition is true", func() {
 				status := &Status{}
-				status.SetCondition(NewCondition(ConditionReady, ConditionTrue, KMSIssuerReasonIssued, ""))
+				empty := NewCondition(ConditionReady, ConditionTrue, KMSIssuerReasonIssued, "")
+				status.SetCondition(&empty)
 				Expect(status.IsReady()).To(BeTrue())
 			})
 
 			It("should return false with the Ready Condition is false", func() {
 				status := &Status{}
-				status.SetCondition(NewCondition(ConditionReady, ConditionFalse, KMSIssuerReasonIssued, ""))
+				empty := NewCondition(ConditionReady, ConditionFalse, KMSIssuerReasonIssued, "")
+				status.SetCondition(&empty)
 				Expect(status.IsReady()).To(BeFalse())
 			})
 			It("should return false with the Ready Condition is not set", func() {

@@ -28,7 +28,7 @@ const (
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialised.
 
 // KMSKeySpec defines the desired state of KMSKey
 type KMSKeySpec struct {
@@ -59,7 +59,7 @@ type KMSKeySpec struct {
 type KMSKeyStatus struct {
 	Status `json:",inline"`
 	// KeyID is the unique identifier for the customer master key (CMK)
-	KeyId string `json:"keyId,omitempty"`
+	KeyID string `json:"keyId,omitempty"`
 }
 
 // +kubebuilder:object:root=true

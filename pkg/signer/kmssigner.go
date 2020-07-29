@@ -30,18 +30,18 @@ import (
 // KMSSigner implements the crypto/Signer interface that can be used for signing operations
 // using an AWS KMS key. see https://golang.org/pkg/crypto/#Signer
 type KMSSigner struct {
-	//client is and instance of the aws kms client
+	// client is and instance of the aws kms client
 	client kmsiface.KMSAPI
-	// keyId is the KMS Key Id used for signing
-	keyId string
+	// keyID is the KMS Key Id used for signing
+	keyID string
 }
 
 // New returns a KMSSigner instance given and AWS client and a KMS key used for signing.
 // TODO: explain what are the pre-requisits for the KMS key.
-func New(client kmsiface.KMSAPI, keyId string) *KMSSigner {
+func New(client kmsiface.KMSAPI, keyID string) *KMSSigner {
 	return &KMSSigner{
 		client: client,
-		keyId:  keyId,
+		keyID:  keyID,
 	}
 }
 
@@ -49,7 +49,7 @@ func New(client kmsiface.KMSAPI, keyId string) *KMSSigner {
 // TODO: Do we really need this method? Error handling is inhexistant. Maybe another function?
 func (s *KMSSigner) Public() crypto.PublicKey {
 	response, err := s.client.GetPublicKey(&kms.GetPublicKeyInput{
-		KeyId: &s.keyId,
+		KeyId: &s.keyID,
 	})
 	if err != nil {
 		return nil
@@ -66,7 +66,7 @@ func (s *KMSSigner) Public() crypto.PublicKey {
 // TODO: should use the opts provided.
 func (s *KMSSigner) Sign(rand io.Reader, digest []byte, opts crypto.SignerOpts) ([]byte, error) {
 	resp, err := s.client.Sign(&kms.SignInput{
-		KeyId:            &s.keyId,
+		KeyId:            &s.keyID,
 		Message:          digest,
 		MessageType:      aws.String(kms.MessageTypeDigest),
 		SigningAlgorithm: aws.String(kms.SigningAlgorithmSpecRsassaPkcs1V15Sha256),

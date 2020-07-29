@@ -98,7 +98,7 @@ func (r *KMSKeyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	// Create the KMS key
-	keyId, err := r.KMSCA.CreateKey(&kmsca.CreateKeyInput{
+	keyID, err := r.KMSCA.CreateKey(&kmsca.CreateKeyInput{
 		AliasName:             kmsKey.Spec.AliasName,
 		Description:           kmsKey.Spec.Description,
 		CustomerMasterKeySpec: kmsKey.Spec.CustomerMasterKeySpec,
@@ -108,7 +108,7 @@ func (r *KMSKeyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	if err != nil {
 		return ctrl.Result{}, r.manageFailure(ctx, log, kmsKey, err, "Failed to create the kms key")
 	}
-	kmsKey.Status.KeyId = keyId
+	kmsKey.Status.KeyID = keyID
 	if err := r.Client.Status().Update(ctx, kmsKey); err != nil {
 		return ctrl.Result{}, r.manageFailure(ctx, log, kmsKey, err, "Failed to update kmsKey.Status.KeyId")
 	}
@@ -125,23 +125,19 @@ func (r *KMSKeyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 func (r *KMSKeyReconciler) manageSuccess(ctx context.Context, log logr.Logger, kmskey *kmsiapi.KMSKey) error {
 	reason := kmsiapi.KMSKeyReasonIssued
 	msg := ""
-	log.Info("successfuly reconciled kms key")
+	log.Info("successfully reconciled kms key")
 	r.Recorder.Event(kmskey, core.EventTypeNormal, reason, msg)
-	kmskey.Status.SetCondition(kmsiapi.NewCondition(kmsiapi.ConditionReady, kmsiapi.ConditionTrue, reason, msg))
-	if err := r.Client.Status().Update(ctx, kmskey); err != nil {
-		return err
-	}
-	return nil
+	ready := kmsiapi.NewCondition(kmsiapi.ConditionReady, kmsiapi.ConditionTrue, reason, msg)
+	kmskey.Status.SetCondition(&ready)
+	return r.Client.Status().Update(ctx, kmskey)
 }
 
 // manageFailure
-func (r *KMSKeyReconciler) manageFailure(ctx context.Context, log logr.Logger, kmskey *kmsiapi.KMSKey, issue error, message string) error {
+func (r *KMSKeyReconciler) manageFailure(ctx context.Context, log logr.Logger, kmskey *kmsiapi.KMSKey, issue error, msg string) error {
 	reason := kmsiapi.KMSKeyReasonFailed
-	log.Error(issue, message)
-	r.Recorder.Event(kmskey, core.EventTypeWarning, reason, message)
-	kmskey.Status.SetCondition(kmsiapi.NewCondition(kmsiapi.ConditionReady, kmsiapi.ConditionFalse, reason, message))
-	if err := r.Client.Status().Update(ctx, kmskey); err != nil {
-		return err
-	}
-	return nil
+	log.Error(issue, msg)
+	r.Recorder.Event(kmskey, core.EventTypeWarning, reason, msg)
+	ready := kmsiapi.NewCondition(kmsiapi.ConditionReady, kmsiapi.ConditionFalse, reason, msg)
+	kmskey.Status.SetCondition(&ready)
+	return r.Client.Status().Update(ctx, kmskey)
 }

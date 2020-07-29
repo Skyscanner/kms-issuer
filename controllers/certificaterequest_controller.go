@@ -70,14 +70,14 @@ func (r *CertificateRequestReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	// Check the CertificateRequest's issuerRef and if it does not match the api
 	// group name, log a message at a debug level and stop processing.
 	if cr.Spec.IssuerRef.Group != "" && cr.Spec.IssuerRef.Group != kmsiapi.GroupVersion.Group {
-		log.V(4).Info("resource does not specify an issuerRef group name that we are responsible for", "group", cr.Spec.IssuerRef.Group)
+		log.V(4).Info("resource does not specify an issuerRef group name that we are responsible for", "group", cr.Spec.IssuerRef.Group) //nolint:gomnd // TODO: fix when refactoring the logger
 		return ctrl.Result{}, nil
 	}
 
 	// If the certificate data is already set then we skip this request as it
 	// has already been completed in the past.
 	if len(cr.Status.Certificate) > 0 {
-		log.V(4).Info("existing certificate data found in status, skipping already completed CertificateRequest")
+		log.V(4).Info("existing certificate data found in status, skipping already completed CertificateRequest") //nolint:gomnd // TODO: fix when refactoring the logger
 		return ctrl.Result{}, nil
 	}
 
@@ -120,7 +120,7 @@ func (r *CertificateRequestReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	}
 
 	signed, err := r.KMSCA.SignCertificate(&kmsca.IssueCertificateInput{
-		KeyId:     issuer.Spec.KeyId,
+		KeyID:     issuer.Spec.KeyID,
 		Parent:    parent,
 		Cert:      cert,
 		PublicKey: cert.PublicKey,
@@ -135,7 +135,7 @@ func (r *CertificateRequestReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	return ctrl.Result{}, r.setStatus(ctx, cr, cmmeta.ConditionTrue, cmapi.CertificateRequestReasonIssued, "Certificate issued")
 }
 
-// SetupWithManager initializes the CertificateRequest controller into the
+// SetupWithManager initialises the CertificateRequest controller into the
 // controller runtime.
 func (r *CertificateRequestReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).

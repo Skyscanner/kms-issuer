@@ -8,6 +8,13 @@ repos:
           - --allow-multiple-documents
       - id: end-of-file-fixer
       - id: trailing-whitespace
+  - repo: https://github.com/golangci/golangci-lint
+    rev: v1.29.0
+    hooks:
+      - id: golangci-lint
+        args:
+        - --timeout
+        - 2m
   - repo: local
     hooks:
       - id: fmt

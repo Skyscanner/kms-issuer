@@ -12,6 +12,9 @@ repos:
     rev: v1.29.0
     hooks:
       - id: golangci-lint
+        args:
+        - --timeout
+        - 2m
   - repo: local
     hooks:
       - id: fmt

@@ -261,6 +261,13 @@ metadata:
   name: kms-issuer-manager-role
 rules:
 - apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+- apiGroups:
   - cert-manager.io
   resources:
   - certificaterequests

@@ -45,6 +45,9 @@ type KMSIssuerReconciler struct {
 	KMSCA    *kmsca.KMSCA
 }
 
+// Annotation for generating RBAC role for writing Events
+// +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
+
 // +kubebuilder:rbac:groups=cert-manager.skyscanner.net,resources=kmsissuers,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=cert-manager.skyscanner.net,resources=kmsissuers/status,verbs=get;update;patch
 

@@ -45,6 +45,9 @@ type CertificateRequestReconciler struct {
 	KMSCA    *kmsca.KMSCA
 }
 
+// Annotation for generating RBAC role for writing Events
+// +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
+
 // +kubebuilder:rbac:groups=cert-manager.io,resources=certificaterequests,verbs=get;list;watch;update
 // +kubebuilder:rbac:groups=cert-manager.io,resources=certificaterequests/status,verbs=get;update;patch
 

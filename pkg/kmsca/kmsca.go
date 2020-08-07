@@ -21,7 +21,7 @@ import (
 	"crypto/rand"
 	"crypto/x509"
 	"crypto/x509/pkix"
-	"fmt"
+	"errors"
 	"math/big"
 	"time"
 
@@ -144,10 +144,13 @@ func (ca *KMSCA) GenerateCertificateAuthorityCertificate(input *GenerateCertific
 		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
 		BasicConstraintsValid: true,
 	}
-	newSigner := signer.New(ca.Client, input.KeyID)
+	newSigner, err := signer.New(ca.Client, input.KeyID)
+	if err != nil {
+		return nil, err
+	}
 	pub := newSigner.Public()
 	if pub == nil {
-		return nil, fmt.Errorf("could not retrieve the public key associated with the KMS private key")
+		return nil, errors.New("could not retrieve the public key associated with the KMS private key")
 	}
 	signedBytes, err := x509.CreateCertificate(rand.Reader, cert, cert, pub, newSigner)
 	if err != nil {
@@ -158,7 +161,10 @@ func (ca *KMSCA) GenerateCertificateAuthorityCertificate(input *GenerateCertific
 
 // SignCertificate Signs a certificate request using KMS.
 func (ca *KMSCA) SignCertificate(input *IssueCertificateInput) (*x509.Certificate, error) {
-	newSigner := signer.New(ca.Client, input.KeyID)
+	newSigner, err := signer.New(ca.Client, input.KeyID)
+	if err != nil {
+		return nil, err
+	}
 	signedBytes, err := x509.CreateCertificate(rand.Reader, input.Cert, input.Parent, input.PublicKey, newSigner)
 	if err != nil {
 		return nil, err

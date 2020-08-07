@@ -34,31 +34,34 @@ type KMSSigner struct {
 	client kmsiface.KMSAPI
 	// keyID is the KMS Key Id used for signing
 	keyID string
+	// public key
+	publicKey crypto.PublicKey
 }
 
 // New returns a KMSSigner instance given and AWS client and a KMS key used for signing.
 // TODO: explain what are the pre-requisits for the KMS key.
-func New(client kmsiface.KMSAPI, keyID string) *KMSSigner {
-	return &KMSSigner{
-		client: client,
-		keyID:  keyID,
-	}
-}
-
-// Public returns the public key corresponding to the opaque, private key.
-// TODO: Do we really need this method? Error handling is inhexistant. Maybe another function?
-func (s *KMSSigner) Public() crypto.PublicKey {
-	response, err := s.client.GetPublicKey(&kms.GetPublicKeyInput{
-		KeyId: &s.keyID,
+// TODO: implement PublicKey caching with periodical refresh
+func New(client kmsiface.KMSAPI, keyID string) (*KMSSigner, error) {
+	response, err := client.GetPublicKey(&kms.GetPublicKeyInput{
+		KeyId: &keyID,
 	})
 	if err != nil {
-		return nil
+		return nil, err
 	}
 	key, err := x509.ParsePKIXPublicKey(response.PublicKey)
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	return key
+	return &KMSSigner{
+		client:    client,
+		keyID:     keyID,
+		publicKey: key,
+	}, nil
+}
+
+// Public returns the public key corresponding to the opaque, private key.
+func (s *KMSSigner) Public() crypto.PublicKey {
+	return s.publicKey
 }
 
 // Sign signs digest with the KMS key.

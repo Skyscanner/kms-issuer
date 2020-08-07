@@ -55,8 +55,9 @@ var _ = Context("Signer", func() {
 			Expect(err).To(BeNil())
 
 			By("creating a new KMSSigner")
-			signer := signer.New(client, *key.KeyMetadata.KeyId)
+			signer, err := signer.New(client, *key.KeyMetadata.KeyId)
 			Expect(signer).NotTo(BeNil())
+			Expect(err).To(BeNil())
 
 			By("extracting the public key")
 			pub := signer.Public()
@@ -78,4 +79,13 @@ var _ = Context("Signer", func() {
 		})
 	})
 
+	Describe("Given an invalid KMS key ID", func() {
+		It("should fail", func() {
+			client := mocks.New()
+			By("erroring out")
+			signer, err := signer.New(client, "invalid key ID")
+			Expect(signer).To(BeNil())
+			Expect(err).NotTo(BeNil())
+		})
+	})
 })

@@ -16,7 +16,7 @@ endif
 all: manager
 
 # Run tests
-test: generate tidy fmt vet manifests
+test: generate tidy fmt lint manifests
 ifeq ($(USE_EXISTING_CLUSTER), "true")
 	kind create cluster --name kms-issuer-test && \
 		USE_EXISTING_CLUSTER=$(USE_EXISTING_CLUSTER) go test ./... -coverprofile cover.out

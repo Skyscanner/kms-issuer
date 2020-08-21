@@ -23,9 +23,8 @@ import (
 	"time"
 
 	kmsiapi "github.com/Skyscanner/kms-issuer/api/v1alpha1"
-	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
-
 	"github.com/Skyscanner/kms-issuer/pkg/kmsca"
+	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
 	"github.com/jetstack/cert-manager/test/e2e/util"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -51,9 +50,11 @@ var _ = Context("CertificateRequestReconciler", func() {
 					Namespace: issuerKey.Namespace,
 				},
 				Spec: kmsiapi.KMSIssuerSpec{
-					KeyID:      keyID,
-					CommonName: "RootCA",
-					Duration:   &metav1.Duration{},
+					KeyID:        keyID,
+					CommonName:   "RootCA",
+					SerialNumber: int64(1234),
+					NotBefore:    metav1.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
+					NotAfter:     metav1.Date(2030, 1, 1, 0, 0, 0, 0, time.UTC),
 				},
 			}
 			Expect(k8sClient.Create(context.Background(), issuer)).Should(Succeed(), "failed to create test KMSIssuer resource")

@@ -5,5 +5,7 @@ metadata:
   namespace: default
 spec:
   commonName: Test Root CA
-  duration: 87600h # 10 years
+  serialNumber: 1234
+  notBefore: '2020-01-01T00:00:00Z'
+  notAfter: '2030-01-01T00:00:00Z'
   keyId: a9695e53-9355-4f6e-8b60-dec3b19912b3

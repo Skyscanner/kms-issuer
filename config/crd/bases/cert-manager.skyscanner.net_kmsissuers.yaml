@@ -42,14 +42,25 @@ spec:
                 generating invalid CSRs. This value is ignored by TLS clients when
                 any subject alt name is set. This is x509 behaviour: https://tools.ietf.org/html/rfc6125#section-6.4.4'
               type: string
-            duration:
-              description: Certificate default Duration
-              type: string
             keyId:
               description: KeyID is the unique identifier for the customer master
                 key (CMK) deletion. When unspecified, a RSA 2048 key is created and
                 managed by the operator.
               type: string
+            notAfter:
+              description: The time and date past which the certificate is no longer
+                valid.
+              format: date-time
+              type: string
+            notBefore:
+              description: The earliest time and date on which the certificate is
+                valid.
+              format: date-time
+              type: string
+            serialNumber:
+              description: SerialNumber used to uniquely identify the certificate.
+              format: int64
+              type: integer
           type: object
         status:
           description: KMSIssuerStatus defines the observed state of KMSIssuer

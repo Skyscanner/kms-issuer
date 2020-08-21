@@ -27,10 +27,14 @@ spec:
       description: KMSIssuer is the Schema for the kmsissuers API
       properties:
         apiVersion:
-          description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
           type: string
         kind:
-          description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
           type: string
         metadata:
           type: object
@@ -38,20 +42,37 @@ spec:
           description: KMSIssuerSpec defines the desired state of KMSIssuer
           properties:
             commonName:
-              description: 'CommonName is a common name to be used on the Certificate. The CommonName should have a length of 64 characters or fewer to avoid generating invalid CSRs. This value is ignored by TLS clients when any subject alt name is set. This is x509 behaviour: https://tools.ietf.org/html/rfc6125#section-6.4.4'
-              type: string
-            duration:
-              description: Certificate default Duration
+              description: 'CommonName is a common name to be used on the Certificate.
+                The CommonName should have a length of 64 characters or fewer to avoid
+                generating invalid CSRs. This value is ignored by TLS clients when
+                any subject alt name is set. This is x509 behaviour: https://tools.ietf.org/html/rfc6125#section-6.4.4'
               type: string
             keyId:
-              description: KeyID is the unique identifier for the customer master key (CMK) deletion. When unspecified, a RSA 2048 key is created and managed by the operator.
+              description: KeyID is the unique identifier for the customer master
+                key (CMK) deletion. When unspecified, a RSA 2048 key is created and
+                managed by the operator.
               type: string
+            notAfter:
+              description: The time and date past which the certificate is no longer
+                valid.
+              format: date-time
+              type: string
+            notBefore:
+              description: The earliest time and date on which the certificate is
+                valid.
+              format: date-time
+              type: string
+            serialNumber:
+              description: SerialNumber used to uniquely identify the certificate.
+              format: int64
+              type: integer
           type: object
         status:
           description: KMSIssuerStatus defines the observed state of KMSIssuer
           properties:
             certificate:
-              description: Byte slice containing a PEM encoded signed certificate of the CA
+              description: Byte slice containing a PEM encoded signed certificate
+                of the CA
               format: byte
               type: string
             conditions:
@@ -59,14 +80,17 @@ spec:
                 description: Condition contains condition information.
                 properties:
                   lastTransitionTime:
-                    description: LastTransitionTime is the timestamp corresponding to the last status change of this condition.
+                    description: LastTransitionTime is the timestamp corresponding
+                      to the last status change of this condition.
                     format: date-time
                     type: string
                   message:
-                    description: Message is a human readable description of the details of the last transition, complementing reason.
+                    description: Message is a human readable description of the details
+                      of the last transition, complementing reason.
                     type: string
                   reason:
-                    description: Reason is a brief machine readable explanation for the condition's last transition.
+                    description: Reason is a brief machine readable explanation for
+                      the condition's last transition.
                     type: string
                   status:
                     allOf:
@@ -78,7 +102,8 @@ spec:
                       - "True"
                       - "False"
                       - Unknown
-                    description: Status of the condition, one of ('True', 'False', 'Unknown').
+                    description: Status of the condition, one of ('True', 'False',
+                      'Unknown').
                     type: string
                   type:
                     description: Type of the condition, currently ('Ready').
@@ -126,10 +151,14 @@ spec:
       description: KMSKey is the Schema for the kmskeys API
       properties:
         apiVersion:
-          description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
           type: string
         kind:
-          description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
           type: string
         metadata:
           type: object
@@ -137,13 +166,17 @@ spec:
           description: KMSKeySpec defines the desired state of KMSKey
           properties:
             aliasName:
-              description: AliasName Specifies the alias name for the kms key. This value must begin with alias/ followed by a name, such as alias/ExampleAlias.
+              description: AliasName Specifies the alias name for the kms key. This
+                value must begin with alias/ followed by a name, such as alias/ExampleAlias.
               type: string
             customerMasterKeySpec:
-              description: CustomerMasterKeySpec determines the signing algorithms that the CMK supports. Only RSA_2048 is currently supported.
+              description: CustomerMasterKeySpec determines the signing algorithms
+                that the CMK supports. Only RSA_2048 is currently supported.
               type: string
             deletionPendingWindowInDays:
-              description: This value is optional. If you include a value, it must be between 7 and 30, inclusive. If you do not include a value, it defaults to 30.
+              description: This value is optional. If you include a value, it must
+                be between 7 and 30, inclusive. If you do not include a value, it
+                defaults to 30.
               type: integer
             deletionPolicy:
               description: DeletionPolicy to deletes the alias and key on object deletion.
@@ -173,14 +206,17 @@ spec:
                 description: Condition contains condition information.
                 properties:
                   lastTransitionTime:
-                    description: LastTransitionTime is the timestamp corresponding to the last status change of this condition.
+                    description: LastTransitionTime is the timestamp corresponding
+                      to the last status change of this condition.
                     format: date-time
                     type: string
                   message:
-                    description: Message is a human readable description of the details of the last transition, complementing reason.
+                    description: Message is a human readable description of the details
+                      of the last transition, complementing reason.
                     type: string
                   reason:
-                    description: Reason is a brief machine readable explanation for the condition's last transition.
+                    description: Reason is a brief machine readable explanation for
+                      the condition's last transition.
                     type: string
                   status:
                     allOf:
@@ -192,7 +228,8 @@ spec:
                       - "True"
                       - "False"
                       - Unknown
-                    description: Status of the condition, one of ('True', 'False', 'Unknown').
+                    description: Status of the condition, one of ('True', 'False',
+                      'Unknown').
                     type: string
                   type:
                     description: Type of the condition, currently ('Ready').
@@ -205,7 +242,8 @@ spec:
                 type: object
               type: array
             keyId:
-              description: KeyID is the unique identifier for the customer master key (CMK)
+              description: KeyID is the unique identifier for the customer master
+                key (CMK)
               type: string
           type: object
       type: object
@@ -427,6 +465,16 @@ spec:
     spec:
       containers:
       - args:
+        - --secure-listen-address=0.0.0.0:8443
+        - --upstream=http://127.0.0.1:8080/
+        - --logtostderr=true
+        - --v=10
+        image: gcr.io/kubebuilder/kube-rbac-proxy:v0.5.0
+        name: kube-rbac-proxy
+        ports:
+        - containerPort: 8443
+          name: https
+      - args:
         - --metrics-addr=127.0.0.1:8080
         - --enable-leader-election
         command:
@@ -440,14 +488,4 @@ spec:
           requests:
             cpu: 100m
             memory: 20Mi
-      - args:
-        - --secure-listen-address=0.0.0.0:8443
-        - --upstream=http://127.0.0.1:8080/
-        - --logtostderr=true
-        - --v=10
-        image: gcr.io/kubebuilder/kube-rbac-proxy:v0.5.0
-        name: kube-rbac-proxy
-        ports:
-        - containerPort: 8443
-          name: https
       terminationGracePeriodSeconds: 10

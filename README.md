@@ -13,7 +13,7 @@ For any details on Cert-Manager, check the [official documentation](https://cert
 
 ### Usage
 
-1. Install [cert-manager](https://cert-manager.io/docs/installation/). The operator has been tested with version 1.15.
+1. Install [cert-manager](https://cert-manager.io/docs/installation/). The operator has been tested with version 0.15.1
 
   ```bash
   kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v0.15.1/cert-manager.yaml
@@ -72,7 +72,9 @@ For any details on Cert-Manager, check the [official documentation](https://cert
   spec:
     keyId: alias/kms-issuer-example # The KMS key id or alias
     commonName: My Root CA # The common name for the root certificate
-    duration: 87600h # 10 years
+    serialNumber: 1234 # Used to uniquely identify the certificate
+    notBefore: '2020-01-01T00:00:00Z' # The earliest time and date on which the certificate is valid.
+    notAfter: '2030-01-01T00:00:00Z' # The time and date past which the certificate is no longer valid.
   EOF
   ```
 

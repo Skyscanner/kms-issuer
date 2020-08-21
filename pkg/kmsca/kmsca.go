@@ -39,10 +39,6 @@ type KMSCA struct {
 	Client kmsiface.KMSAPI
 }
 
-var (
-	caSerialNumber = big.NewInt(2020) //nolint:gomnd // static serial number
-)
-
 // NewKMSCA creates a new instance of the KMSCA client with a session.
 // If additional configuration is needed for the client instance use the optional
 // aws.Config parameter to add your extra config.
@@ -135,7 +131,7 @@ func (ca *KMSCA) DeleteKey(input *DeleteKeyInput) error {
 // GenerateCertificateAuthorityCertificate returns the signed Certificate Authority Certificate
 func (ca *KMSCA) GenerateCertificateAuthorityCertificate(input *GenerateCertificateAuthorityCertificateInput) (*x509.Certificate, error) {
 	cert := &x509.Certificate{
-		SerialNumber:          caSerialNumber,
+		SerialNumber:          big.NewInt(input.SerialNumber),
 		Subject:               input.Subject,
 		NotBefore:             input.NotBefore,
 		NotAfter:              input.NotAfter,
@@ -205,6 +201,8 @@ type Key struct {
 type GenerateCertificateAuthorityCertificateInput struct {
 	// KeyID is the KMS Key Id
 	KeyID string
+	// Serial Number is used to uniquely identify the certificate
+	SerialNumber int64
 	// Subject of the CA certifiacte
 	Subject pkix.Name
 	// NotBefore is the time at which the certificate validity starts

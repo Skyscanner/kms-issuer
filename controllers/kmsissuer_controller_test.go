@@ -62,9 +62,11 @@ var _ = Context("KMSIssuer", func() {
 					Namespace: key.Namespace,
 				},
 				Spec: kmsiapi.KMSIssuerSpec{
-					KeyID:      keyID,
-					CommonName: "RootCA",
-					Duration:   &metav1.Duration{},
+					KeyID:        keyID,
+					CommonName:   "RootCA",
+					SerialNumber: int64(1234),
+					NotBefore:    metav1.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
+					NotAfter:     metav1.Date(2030, 1, 1, 0, 0, 0, 0, time.UTC),
 				},
 			}
 			Expect(k8sClient.Create(context.Background(), issuer)).Should(Succeed(), "failed to create test KMSIssuer resource")

@@ -46,9 +46,14 @@ type KMSIssuerSpec struct {
 	// This is x509 behaviour: https://tools.ietf.org/html/rfc6125#section-6.4.4
 	CommonName string `json:"commonName,omitempty"`
 
-	// Certificate default Duration
-	// +optional
-	Duration *metav1.Duration `json:"duration,omitempty"`
+	// The earliest time and date on which the certificate is valid.
+	NotBefore metav1.Time `json:"notBefore,omitempty"`
+
+	// The time and date past which the certificate is no longer valid.
+	NotAfter metav1.Time `json:"notAfter,omitempty"`
+
+	// SerialNumber used to uniquely identify the certificate.
+	SerialNumber int64 `json:"serialNumber,omitempty"`
 }
 
 // KMSIssuerStatus defines the observed state of KMSIssuer

@@ -23,7 +23,6 @@ import (
 
 	"crypto/x509/pkix"
 	"encoding/pem"
-	"time"
 
 	kmsiapi "github.com/Skyscanner/kms-issuer/api/v1alpha1"
 	"github.com/Skyscanner/kms-issuer/pkg/kmsca"
@@ -87,13 +86,16 @@ func (r *KMSIssuerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			Subject: pkix.Name{
 				CommonName: issuer.Spec.CommonName,
 			},
-			NotBefore: time.Now(),
-			NotAfter:  time.Now().Add(issuer.Spec.Duration.Duration),
+			SerialNumber: issuer.Spec.SerialNumber,
+			NotBefore:    issuer.Spec.NotBefore.Time,
+			NotAfter:     issuer.Spec.NotAfter.Time,
 		})
 		if err != nil {
 			return ctrl.Result{}, r.manageFailure(ctx, log, issuer, err, "Failed to generate the Certificate Authority Certificate")
 		}
+
 		issuer.Status.Certificate = pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: cert.Raw})
+		log.Info(string(issuer.Status.Certificate))
 		if err := r.Client.Status().Update(ctx, issuer); err != nil {
 			return ctrl.Result{}, r.manageFailure(ctx, log, issuer, err, "Failed to update the issuer with the issued Certificate")
 		}

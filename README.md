@@ -13,7 +13,7 @@ For any details on Cert-Manager, check the [official documentation](https://cert
 
 ### Usage
 
-1. Install [cert-manager](https://cert-manager.io/docs/installation/). The operator has been tested with version 1.15.
+1. Install [cert-manager](https://cert-manager.io/docs/installation/). The operator has been tested with version v0.15.1
 
   ```bash
   kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v0.15.1/cert-manager.yaml

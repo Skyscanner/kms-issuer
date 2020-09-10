@@ -40,8 +40,6 @@ import (
 const (
 	// DefaultCertDuration is the default duration the CA certificate is valid for.
 	DefaultCertDuration = time.Hour * 24 * 365 * 3 // 3 years
-	// DefaultCertRenewalRatio is the default period of time before the CA cetificate is renewed.
-	DefaultCertRenewalRatio = 2 / 3
 )
 
 // KMSIssuerReconciler reconciles a KMSIssuer object.
@@ -84,44 +82,49 @@ func (r *KMSIssuerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	// validation
 	if issuer.Spec.KeyID == "" {
-		return ctrl.Result{}, r.manageFailure(ctx, log, issuer, errors.New("INVALID KeyId"), fmt.Sprintf("Not a valid key: %s", issuer.Spec.KeyID))
+		return ctrl.Result{}, r.manageFailure(ctx, issuer, errors.New("INVALID KeyId"), fmt.Sprintf("Not a valid key: %s", issuer.Spec.KeyID))
 	}
 	// set default values
-	setIssuerDefaultValues(issuer)
+	r.setIssuerDefaultValues(issuer)
 
 	// Renew the certificate
 	certInput := desiredCertificateAuthorityCertificateInput(issuer)
 	desiredCert := r.KMSCA.GenerateCertificateAuthorityCertificate(certInput)
 
-	if certificateNeedsRenewal(issuer, desiredCert) {
+	if r.certificateNeedsRenewal(issuer, desiredCert) {
 		log.Info("generate certificate")
 		cert, err := r.KMSCA.GenerateAndSignCertificateAuthorityCertificate(certInput)
 		if err != nil {
-			return ctrl.Result{}, r.manageFailure(ctx, log, issuer, err, "Failed to generate the Certificate Authority Certificate")
+			return ctrl.Result{}, r.manageFailure(ctx, issuer, err, "Failed to generate the Certificate Authority Certificate")
 		}
 		issuer.Status.Certificate = pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: cert.Raw})
 		if err := r.Client.Status().Update(ctx, issuer); err != nil {
-			return ctrl.Result{}, r.manageFailure(ctx, log, issuer, err, "Failed to update the issuer with the issued Certificate")
+			return ctrl.Result{}, r.manageFailure(ctx, issuer, err, "Failed to update the issuer with the issued Certificate")
 		}
 	}
 	return ctrl.Result{
 		RequeueAfter: time.Until(desiredCert.NotAfter.Add(-1 * issuer.Spec.RenewBefore.Duration)),
-	}, r.manageSuccess(ctx, log, issuer)
+	}, r.manageSuccess(ctx, issuer)
 }
 
 // setIssuerDefaultValues
-func setIssuerDefaultValues(issuer *kmsiapi.KMSIssuer) {
+func (r *KMSIssuerReconciler) setIssuerDefaultValues(issuer *kmsiapi.KMSIssuer) {
+	log := r.Log.WithValues("name", issuer.Name, "namespace", issuer.Namespace)
 	if issuer.Spec.Duration == nil || issuer.Spec.Duration.Duration == 0 {
+		log.Info("setting default duration", "duration", DefaultCertDuration)
 		issuer.Spec.Duration = &metav1.Duration{Duration: DefaultCertDuration}
 	}
+	renewBefore := issuer.Spec.Duration.Duration * 2 / 3 //nolint:mnd // renew in 2/3 of the duration
 	if issuer.Spec.RenewBefore == nil {
+		log.Info("setting default", "RenewBefore", renewBefore)
 		issuer.Spec.RenewBefore = &metav1.Duration{
-			Duration: issuer.Spec.Duration.Duration * DefaultCertRenewalRatio,
+			Duration: renewBefore,
 		}
 	}
 	if issuer.Spec.RenewBefore.Duration > issuer.Spec.Duration.Duration {
+		log.Info("overriding missconfigured value", "RenewBefore", renewBefore)
 		issuer.Spec.RenewBefore = &metav1.Duration{
-			Duration: issuer.Spec.Duration.Duration * DefaultCertRenewalRatio,
+			Duration: renewBefore,
 		}
 	}
 }
@@ -138,23 +141,28 @@ func ParseCertificate(cert []byte) (*x509.Certificate, error) {
 }
 
 // certificateNeedsRenewal returns True if the certificate needs to be created/renewed.
-func certificateNeedsRenewal(issuer *kmsiapi.KMSIssuer, desiredCert *x509.Certificate) bool {
+func (r *KMSIssuerReconciler) certificateNeedsRenewal(issuer *kmsiapi.KMSIssuer, desiredCert *x509.Certificate) bool {
+	log := r.Log.WithValues("name", issuer.Name, "namespace", issuer.Namespace)
 	// Check if the certificate hasn't been issued yet.
 	if len(issuer.Status.Certificate) == 0 {
+		log.Info("certificate hasn't been issued yet")
 		return true
 	}
 	// Check if the existing cetificate is valid.
 	actualCert, err := ParseCertificate(issuer.Status.Certificate)
 	if err != nil {
+		log.Info("existing certificate isn't valid", "error", err)
 		return true
 	}
 	// Check if it is time to renew the certificate
 	if time.Until(actualCert.NotAfter.Add(-1*issuer.Spec.RenewBefore.Duration)) == 0 {
+		log.Info("it is time to renew the certificate", "NotAfter", actualCert.NotAfter, "renewBefore", issuer.Spec.RenewBefore.Duration)
 		return true
 	}
 
 	// Check if the certificate has changed
-	if desiredCert.SerialNumber != actualCert.SerialNumber {
+	if desiredCert.SerialNumber.Cmp(actualCert.SerialNumber) != 0 {
+		log.Info("certificate serial number missmatch", "desired", desiredCert.SerialNumber, "actual", actualCert.SerialNumber)
 		return true
 	}
 	return false
@@ -180,7 +188,8 @@ func (r *KMSIssuerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 // manageSuccess
-func (r *KMSIssuerReconciler) manageSuccess(ctx context.Context, log logr.Logger, issuer *kmsiapi.KMSIssuer) error {
+func (r *KMSIssuerReconciler) manageSuccess(ctx context.Context, issuer *kmsiapi.KMSIssuer) error {
+	log := r.Log.WithValues("name", issuer.Name, "namespace", issuer.Namespace)
 	reason := kmsiapi.KMSIssuerReasonIssued
 	msg := ""
 	log.Info("successfully reconciled issuer")
@@ -191,7 +200,8 @@ func (r *KMSIssuerReconciler) manageSuccess(ctx context.Context, log logr.Logger
 }
 
 // manageFailure
-func (r *KMSIssuerReconciler) manageFailure(ctx context.Context, log logr.Logger, issuer *kmsiapi.KMSIssuer, issue error, message string) error {
+func (r *KMSIssuerReconciler) manageFailure(ctx context.Context, issuer *kmsiapi.KMSIssuer, issue error, message string) error {
+	log := r.Log.WithValues("name", issuer.Name, "namespace", issuer.Namespace)
 	reason := kmsiapi.KMSIssuerReasonFailed
 	log.Error(issue, message)
 	r.Recorder.Event(issuer, core.EventTypeWarning, reason, message)

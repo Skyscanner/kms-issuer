@@ -64,7 +64,6 @@ var _ = Context("KMSIssuer", func() {
 				Spec: kmsiapi.KMSIssuerSpec{
 					KeyID:      keyID,
 					CommonName: "RootCA",
-					Duration:   &metav1.Duration{},
 				},
 			}
 			Expect(k8sClient.Create(context.Background(), issuer)).Should(Succeed(), "failed to create test KMSIssuer resource")
@@ -75,6 +74,54 @@ var _ = Context("KMSIssuer", func() {
 			By("Getting the Public Cert")
 			Expect(len(issuer.Status.Certificate)).NotTo(BeNil())
 
+			cert, err := ParseCertificate(issuer.Status.Certificate)
+			Expect(err).To(BeNil())
+			Expect(cert.NotAfter.Sub(cert.NotBefore)).To(Equal(DefaultCertDuration))
+		})
+
+		It("should renew the certificate ", func() {
+			By("Creating a KMS Key")
+			keyID, err := ca.CreateKey(&kmsca.CreateKeyInput{
+				AliasName: "alias/test-key",
+			})
+			Expect(err).To(BeNil())
+
+			By("Creating a KMSIssuer object with an empty KeyId")
+			key := client.ObjectKey{
+				Name:      "key-to-renew",
+				Namespace: "default",
+			}
+			issuer := &kmsiapi.KMSIssuer{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      key.Name,
+					Namespace: key.Namespace,
+				},
+				Spec: kmsiapi.KMSIssuerSpec{
+					KeyID:      keyID,
+					CommonName: "RootCA",
+					Duration: &metav1.Duration{
+						Duration: time.Second,
+					},
+				},
+			}
+			Expect(k8sClient.Create(context.Background(), issuer)).Should(Succeed(), "failed to create test KMSIssuer resource")
+
+			By("Waiting for the Issuer certificate to be issued")
+			issuer = WaitIssuerReady(key)
+			cert, err := ParseCertificate(issuer.Status.Certificate)
+			serialNumber := cert.SerialNumber
+			Expect(err).To(BeNil())
+			Expect(serialNumber).NotTo(BeNil())
+
+			By("Waiting for the Issuer certificate to be renew")
+			Eventually(
+				func() bool {
+					Expect(k8sClient.Get(context.Background(), key, issuer)).Should(Succeed(), "failed to get KMSIssuer resource")
+					cert, _ := ParseCertificate(issuer.Status.Certificate)
+					return cert.SerialNumber != serialNumber
+				},
+				time.Second*2, time.Millisecond*100,
+			).Should(BeTrue(), "issuer should be renewed")
 		})
 	})
 })

@@ -49,6 +49,11 @@ type KMSIssuerSpec struct {
 	// Certificate default Duration
 	// +optional
 	Duration *metav1.Duration `json:"duration,omitempty"`
+
+	// RenewBefore is the amount of time before the currently issued certificate’s notAfter time that the issuer will begin to attempt to renew the certificate.
+	// If this value is greater than the total duration of the certificate (i.e. notAfter - notBefore), it will be automatically renewed 2/3rds of the way through the certificate’s duration.
+	// +optional
+	RenewBefore *metav1.Duration `json:"renewBefore,omitempty"`
 }
 
 // KMSIssuerStatus defines the observed state of KMSIssuer

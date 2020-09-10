@@ -22,8 +22,11 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"errors"
-	"math/big"
+	"fmt"
 	"time"
+
+	"crypto/sha1" //nolint:gosec // Used for consistent hash
+	"math/big"
 
 	"github.com/Skyscanner/kms-issuer/pkg/signer"
 	"github.com/aws/aws-sdk-go/aws"
@@ -33,15 +36,19 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms/kmsiface"
 )
 
+const (
+	// DefaultCertDuration is the default CA certificate validity duration
+	DefaultCertDuration = time.Hour * 24 * 365 * 3 // 3 year
+	// DefaultCertRenewalRatio is default ratio of time before the certificate
+	// is expected to be renewed
+	DefaultCertRenewalRatio = 2 / 3
+)
+
 // KMSCA KMS Certificate Authority provides the API operation methods for implementation
 // a certificate authority on top of AWS KMS.
 type KMSCA struct {
 	Client kmsiface.KMSAPI
 }
-
-var (
-	caSerialNumber = big.NewInt(2020) //nolint:gomnd // static serial number
-)
 
 // NewKMSCA creates a new instance of the KMSCA client with a session.
 // If additional configuration is needed for the client instance use the optional
@@ -132,18 +139,34 @@ func (ca *KMSCA) DeleteKey(input *DeleteKeyInput) error {
 	return nil
 }
 
-// GenerateCertificateAuthorityCertificate returns the signed Certificate Authority Certificate
-func (ca *KMSCA) GenerateCertificateAuthorityCertificate(input *GenerateCertificateAuthorityCertificateInput) (*x509.Certificate, error) {
+// GenerateCertificateAuthorityCertificate returns the Certificate Authority Certificate
+func (ca *KMSCA) GenerateCertificateAuthorityCertificate(input *GenerateCertificateAuthorityCertificateInput) *x509.Certificate {
+	// Compute the start/end validity.
+	// The rounding factor is used to ensure all the certificates issued within the same period are identical.
+	notBefore := time.Now().Truncate(input.Rounding)
+	notAfter := notBefore.Add(input.Duration)
+
+	// Compute CA certificate
 	cert := &x509.Certificate{
-		SerialNumber:          caSerialNumber,
 		Subject:               input.Subject,
-		NotBefore:             input.NotBefore,
-		NotAfter:              input.NotAfter,
+		NotBefore:             notBefore,
+		NotAfter:              notAfter,
 		IsCA:                  true,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
 		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
 		BasicConstraintsValid: true,
 	}
+	// Compute the serial number
+	serialNumberKey := fmt.Sprintf("%s %v", input, cert)
+	sha := sha1.Sum([]byte(serialNumberKey)) //nolint:gosec // Used for consistent hash
+	cert.SerialNumber = new(big.Int).SetBytes(sha[:])
+
+	return cert
+}
+
+// GenerateAndSignCertificateAuthorityCertificate returns the signed Certificate Authority Certificate
+func (ca *KMSCA) GenerateAndSignCertificateAuthorityCertificate(input *GenerateCertificateAuthorityCertificateInput) (*x509.Certificate, error) {
+	cert := ca.GenerateCertificateAuthorityCertificate(input)
 	newSigner, err := signer.New(ca.Client, input.KeyID)
 	if err != nil {
 		return nil, err
@@ -205,12 +228,14 @@ type Key struct {
 type GenerateCertificateAuthorityCertificateInput struct {
 	// KeyID is the KMS Key Id
 	KeyID string
-	// Subject of the CA certifiacte
+	// Subject of the CA certificate
 	Subject pkix.Name
-	// NotBefore is the time at which the certificate validity starts
-	NotBefore time.Time
-	// NotAfter is the time at which the certificate validity ends
-	NotAfter time.Time
+	// Duration is certificate validity duration
+	Duration time.Duration
+	// Rounding is used to round down the certificate NotBefore time.
+	// For example, by setting the rounding period to 1h, all the certificates generated between the start
+	// and in the end of an hour will be identical
+	Rounding time.Duration
 }
 
 type IssueCertificateInput struct {

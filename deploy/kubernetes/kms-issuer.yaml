@@ -46,6 +46,9 @@ spec:
             keyId:
               description: KeyID is the unique identifier for the customer master key (CMK) deletion. When unspecified, a RSA 2048 key is created and managed by the operator.
               type: string
+            renewBefore:
+              description: RenewBefore is the amount of time before the currently issued certificate’s notAfter time that the issuer will begin to attempt to renew the certificate. If this value is greater than the total duration of the certificate (i.e. notAfter - notBefore), it will be automatically renewed 2/3rds of the way through the certificate’s duration.
+              type: string
           type: object
         status:
           description: KMSIssuerStatus defines the observed state of KMSIssuer

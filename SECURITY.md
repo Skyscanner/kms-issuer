@@ -4,11 +4,9 @@
 
 This project is under active development and we do our best to support the latest versions.
 
-
 | Version | Supported          |
 | ------- | ------------------ |
 | Latest  | :white_check_mark: |
-
 
 ## Reporting a Vulnerability
 

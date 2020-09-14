@@ -1,5 +1,10 @@
 default_stages: [commit]
 repos:
+  - repo: https://github.com/prettier/prettier
+    rev: "1.19.1"
+    hooks:
+      - id: prettier
+        files: '.md'
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v3.1.0
     hooks:

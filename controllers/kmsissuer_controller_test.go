@@ -76,7 +76,7 @@ var _ = Context("KMSIssuer", func() {
 
 			cert, err := ParseCertificate(issuer.Status.Certificate)
 			Expect(err).To(BeNil())
-			Expect(cert.NotAfter.Sub(cert.NotBefore)).To(Equal(DefaultCertDuration))
+			Expect(cert.NotAfter.Sub(cert.NotBefore)).To(Equal(defaultCertDuration))
 		})
 
 		It("should renew the certificate ", func() {

@@ -38,8 +38,10 @@ import (
 )
 
 const (
-	// DefaultCertDuration is the default duration the CA certificate is valid for.
-	DefaultCertDuration = time.Hour * 24 * 365 * 3 // 3 years
+	// defaultCertDuration is the default duration the CA certificate is valid for.
+	defaultCertDuration = time.Hour * 24 * 365 * 3 // 3 years
+	// defaultCertRenewalRatio is the default period of time before the CA cetificate is renewed.
+	defaultCertRenewalRatio = 2.0 / 3
 )
 
 // KMSIssuerReconciler reconciles a KMSIssuer object.
@@ -111,10 +113,10 @@ func (r *KMSIssuerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 func (r *KMSIssuerReconciler) setIssuerDefaultValues(issuer *kmsiapi.KMSIssuer) {
 	log := r.Log.WithValues("name", issuer.Name, "namespace", issuer.Namespace)
 	if issuer.Spec.Duration == nil || issuer.Spec.Duration.Duration == 0 {
-		log.Info("setting default duration", "duration", DefaultCertDuration)
-		issuer.Spec.Duration = &metav1.Duration{Duration: DefaultCertDuration}
+		log.Info("setting default duration", "duration", defaultCertDuration)
+		issuer.Spec.Duration = &metav1.Duration{Duration: defaultCertDuration}
 	}
-	renewBefore := issuer.Spec.Duration.Duration * 2 / 3 //nolint:mnd // renew in 2/3 of the duration
+	renewBefore := time.Duration(float64(issuer.Spec.Duration.Duration.Nanoseconds()) * defaultCertRenewalRatio)
 	if issuer.Spec.RenewBefore == nil {
 		log.Info("setting default", "RenewBefore", renewBefore)
 		issuer.Spec.RenewBefore = &metav1.Duration{

@@ -90,6 +90,49 @@ var _ = Context("KMSCA", func() {
 
 	Describe("when calling GenerateCertificateAuthorityCertificate", func() {
 
+		It("should return a certificate with default values", func() {
+			By("creating a managed key")
+			client := mockKMSCA()
+
+			By("calling GenerateCertificateAuthorityCertificate")
+			input := &kmsca.GenerateCertificateAuthorityCertificateInput{
+				KeyID: "Test ",
+				Subject: pkix.Name{
+					CommonName: "Test CA",
+				},
+				Duration: time.Hour,
+			}
+			cert := client.GenerateCertificateAuthorityCertificate(input)
+			Expect(cert.SerialNumber).NotTo(BeNil())
+			Expect(cert.Subject).To(Equal(input.Subject))
+			Expect(cert.NotAfter.Sub(cert.NotBefore)).To(Equal(input.Duration))
+			Expect(cert.IsCA).To(BeTrue())
+			Expect(cert.ExtKeyUsage).To(Equal([]x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth}))
+			Expect(cert.KeyUsage).To(Equal(x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign))
+			Expect(cert.BasicConstraintsValid).To(BeTrue())
+		})
+
+		It("should generate consistent certificates when using the Rounding factor", func() {
+			By("creating a managed key")
+			client := mockKMSCA()
+
+			By("calling GenerateCertificateAuthorityCertificate")
+			input := &kmsca.GenerateCertificateAuthorityCertificateInput{
+				KeyID: "Test ",
+				Subject: pkix.Name{
+					CommonName: "Test CA",
+				},
+				Duration: time.Hour,
+				Rounding: time.Hour * 24 * 365,
+			}
+			first := client.GenerateCertificateAuthorityCertificate(input)
+			second := client.GenerateCertificateAuthorityCertificate(input)
+			Expect(first).To(Equal(second))
+		})
+	})
+
+	Describe("when calling GenerateAndSignCertificateAuthorityCertificate", func() {
+
 		It("should return a valid ca cert", func() {
 			By("creating a managed key")
 			client := mockKMSCA()
@@ -97,17 +140,23 @@ var _ = Context("KMSCA", func() {
 				AliasName: "alias/test-key",
 			})
 
-			By("calling GenerateCertificateAuthorityCertificate")
-			signed, err := client.GenerateCertificateAuthorityCertificate(&kmsca.GenerateCertificateAuthorityCertificateInput{
+			By("calling GenerateAndSignCertificateAuthorityCertificate")
+			signed, err := client.GenerateAndSignCertificateAuthorityCertificate(&kmsca.GenerateCertificateAuthorityCertificateInput{
 				KeyID: KeyID,
 				Subject: pkix.Name{
 					CommonName: "Test CA",
 				},
-				NotBefore: time.Now(),
-				NotAfter:  time.Now().AddDate(10, 0, 0),
+				Duration: time.Hour,
 			})
-
 			Expect(signed).NotTo(BeNil())
+			Expect(err).To(BeNil())
+
+			By("verifying the signature is valid")
+			roots := x509.NewCertPool()
+			roots.AddCert(signed)
+			_, err = signed.Verify(x509.VerifyOptions{
+				Roots: roots,
+			})
 			Expect(err).To(BeNil())
 		})
 
@@ -122,14 +171,13 @@ var _ = Context("KMSCA", func() {
 				AliasName: "alias/test-key",
 			})
 
-			By("calling GenerateCertificateAuthorityCertificate")
-			parent, _ := client.GenerateCertificateAuthorityCertificate(&kmsca.GenerateCertificateAuthorityCertificateInput{
+			By("calling GenerateAndSignCertificateAuthorityCertificate")
+			parent, _ := client.GenerateAndSignCertificateAuthorityCertificate(&kmsca.GenerateCertificateAuthorityCertificateInput{
 				KeyID: keyID,
 				Subject: pkix.Name{
 					CommonName: "Test CA",
 				},
-				NotBefore: time.Now(),
-				NotAfter:  time.Now().AddDate(10, 0, 0),
+				Duration: time.Hour,
 			})
 
 			By("creating a certificate")

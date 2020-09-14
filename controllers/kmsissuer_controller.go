@@ -157,7 +157,7 @@ func (r *KMSIssuerReconciler) certificateNeedsRenewal(issuer *kmsiapi.KMSIssuer,
 		return true
 	}
 	// Check if it is time to renew the certificate
-	if time.Until(actualCert.NotAfter.Add(-1*issuer.Spec.RenewBefore.Duration)) == 0 {
+	if time.Until(actualCert.NotAfter.Add(-1*issuer.Spec.RenewBefore.Duration)) <= 0 {
 		log.Info("it is time to renew the certificate", "NotAfter", actualCert.NotAfter, "renewBefore", issuer.Spec.RenewBefore.Duration)
 		return true
 	}

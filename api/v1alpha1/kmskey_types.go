@@ -52,7 +52,7 @@ type KMSKeySpec struct {
 	DeletionPolicy string `json:"deletionPolicy,omitempty"`
 	// This value is optional. If you include a value, it must be between 7 and
 	// 30, inclusive. If you do not include a value, it defaults to 30.
-	DeletionPendingWindowInDays int `json:"deletionPendingWindowInDays,omitempty"`
+	DeletionPendingWindowInDays int `json:"deletionPendingWindowInDays,omitempty" validate:"required,min=7,max=30"`
 }
 
 // KMSKeyStatus defines the observed state of KMSKey

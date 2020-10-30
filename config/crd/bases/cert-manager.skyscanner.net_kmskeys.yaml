@@ -36,6 +36,11 @@ spec:
         spec:
           description: KMSKeySpec defines the desired state of KMSKey
           properties:
+            PendingWindowInDays:
+              description: This value is optional. If you include a value, it must
+                be between 7 and 30, inclusive. If you do not include a value, it
+                defaults to 30.
+              type: integer
             aliasName:
               description: AliasName Specifies the alias name for the kms key. This
                 value must begin with alias/ followed by a name, such as alias/ExampleAlias.
@@ -44,11 +49,6 @@ spec:
               description: CustomerMasterKeySpec determines the signing algorithms
                 that the CMK supports. Only RSA_2048 is currently supported.
               type: string
-            deletionPendingWindowInDays:
-              description: This value is optional. If you include a value, it must
-                be between 7 and 30, inclusive. If you do not include a value, it
-                defaults to 30.
-              type: integer
             deletionPolicy:
               description: DeletionPolicy to deletes the alias and key on object deletion.
               enum:
@@ -67,6 +67,7 @@ spec:
               description: Tags is a list of tags for the key
               type: object
           required:
+          - PendingWindowInDays
           - aliasName
           type: object
         status:

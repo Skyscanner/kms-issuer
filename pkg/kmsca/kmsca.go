@@ -92,6 +92,7 @@ func (ca *KMSCA) CreateKey(input *CreateKeyInput) (string, error) {
 		for k, v := range input.Tags {
 			keyInput.Tags = append(keyInput.Tags, &kms.Tag{TagKey: aws.String(k), TagValue: aws.String(v)})
 		}
+
 	}
 	key, err := ca.Client.CreateKey(keyInput)
 	if err != nil {
@@ -208,7 +209,9 @@ type CreateKeyInput struct {
 	// The key policy to attach to the CMK
 	Policy string
 	// Tags is a list of tags for the key
-	Tags map[string]string
+	Tags                        map[string]string
+	// it must be between 7 and 30, inclusive. If you do not include a value, it defaults to 30.
+	PendingWindowInDays int
 }
 
 // DeleteKeyInput input for the CreateKey method

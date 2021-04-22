@@ -23,7 +23,7 @@ import (
 	"time"
 
 	kmsiapi "github.com/Skyscanner/kms-issuer/api/v1alpha1"
-	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
+	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 
 	"github.com/Skyscanner/kms-issuer/pkg/kmsca"
 	"github.com/jetstack/cert-manager/test/e2e/util"

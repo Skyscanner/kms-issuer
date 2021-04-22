@@ -1,26 +1,54 @@
 
+# Created by https://www.toptal.com/developers/gitignore/api/go,osx
+# Edit at https://www.toptal.com/developers/gitignore?templates=go,osx
+
+### Go ###
 # Binaries for programs and plugins
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
-bin
 
-# Test binary, build with `go test -c`
+# Test binary, built with `go test -c`
 *.test
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
-# Kubernetes Generated files - skip generated files, except for vendored files
+# Dependency directories (remove the comment below to include it)
+# vendor/
 
-!vendor/**/zz_generated.*
+### Go Patch ###
+/vendor/
+/Godeps/
 
-# editor and IDE paraphernalia
-.idea
-*.swp
-*.swo
-*~
-deploy/terraform/terraform.tfstate*
-deploy/terraform/.terraform/
+### OSX ###
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Icon must end with two \r
+Icon
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# End of https://www.toptal.com/developers/gitignore/api/go,osx

@@ -1,0 +1,14 @@
+# permissions to approve all cert-manager.skyscanner.net requests
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cert-manager-controller-approve:cert-manager-skyscanner-net
+rules:
+- apiGroups:
+  - cert-manager.io
+  resources:
+  - signers
+  verbs:
+  - approve
+  resourceNames:
+  - kmsissuers.cert-manager.skyscanner.net/*

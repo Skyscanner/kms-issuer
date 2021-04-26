@@ -51,13 +51,13 @@ func init() {
 func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
-	var disableApprovedCheck bool
+	var enableApprovedCheck bool
 
 	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
-	flag.BoolVar(&disableApprovedCheck, "disable-approved-check", false,
+	flag.BoolVar(&enableApprovedCheck, "enable-approved-check", true,
 		"Disables waiting for CertificateRequests to have an approved condition before signing.")
 	flag.Parse()
 
@@ -93,7 +93,7 @@ func main() {
 		KMSCA:    ca,
 
 		Clock:                  clock.RealClock{},
-		CheckApprovedCondition: !disableApprovedCheck,
+		CheckApprovedCondition: enableApprovedCheck,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "CertificateRequest")
 		os.Exit(1)

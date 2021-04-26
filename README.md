@@ -175,8 +175,8 @@ A KMSIssuer resource configures a new [Cert-Manager external issuer](https://cer
 The KMS Issuer will wait for CertificateRequests to have an [approved condition
 set](https://cert-manager.io/docs/concepts/certificaterequest/#approval) before
 signing. If using an older version of cert-manager (pre v1.3), you can disable
-this check by supplying the command line flag `-disable-approved-check` to the
-Issuer Deployment.
+this check by supplying the command line flag `-enable-approved-check=false` to
+the Issuer Deployment.
 
 ## Contributing
 

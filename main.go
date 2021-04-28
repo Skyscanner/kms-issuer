@@ -58,7 +58,7 @@ func main() {
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
 	flag.BoolVar(&enableApprovedCheck, "enable-approved-check", true,
-		"Disables waiting for CertificateRequests to have an approved condition before signing.")
+		"Enable waiting for CertificateRequests to have an approved condition before signing.")
 	flag.Parse()
 
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))

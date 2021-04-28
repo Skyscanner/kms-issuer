@@ -71,8 +71,7 @@ func NewKMSIssuerReconciler(mgr manager.Manager, ca *kmsca.KMSCA) *KMSIssuerReco
 }
 
 // Reconcile KMSIssuer resources.
-func (r *KMSIssuerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	ctx := context.Background()
+func (r *KMSIssuerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("kms-issuer", req.NamespacedName)
 
 	// retrieve the KMSIssuer resource to reconcile.

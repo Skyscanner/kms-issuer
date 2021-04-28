@@ -22,8 +22,10 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"go.uber.org/zap/zapcore"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	"k8s.io/utils/clock"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
@@ -34,7 +36,7 @@ import (
 	kmsca "github.com/Skyscanner/kms-issuer/pkg/kmsca"
 	mocks "github.com/Skyscanner/kms-issuer/pkg/kmsmock"
 
-	certmanager "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
+	certmanager "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 
 	certmanagerv1alpha1 "github.com/Skyscanner/kms-issuer/api/v1alpha1"
 	// +kubebuilder:scaffold:imports
@@ -57,7 +59,7 @@ func TestAPIs(t *testing.T) {
 }
 
 var _ = BeforeSuite(func(done Done) {
-	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter)))
+	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.Level(zapcore.Level(4))))
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
@@ -89,10 +91,12 @@ var _ = BeforeSuite(func(done Done) {
 	ca.Client = mocks.New()
 
 	err = (&CertificateRequestReconciler{
-		Client:   mgr.GetClient(),
-		Log:      logf.Log,
-		Recorder: mgr.GetEventRecorderFor("certificaterequests-controller"),
-		KMSCA:    &ca,
+		Client:                 mgr.GetClient(),
+		Log:                    logf.Log,
+		Recorder:               mgr.GetEventRecorderFor("certificaterequests-controller"),
+		KMSCA:                  &ca,
+		CheckApprovedCondition: true,
+		Clock:                  clock.RealClock{},
 	}).SetupWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred(), "failed to setup the CertificateRequestReconciler controller")
 

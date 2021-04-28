@@ -57,8 +57,7 @@ type KMSKeyReconciler struct {
 // +kubebuilder:rbac:groups=cert-manager.skyscanner.net,resources=kmskeys,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=cert-manager.skyscanner.net,resources=kmskeys/status,verbs=get;update;patch
 
-func (r *KMSKeyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	ctx := context.Background()
+func (r *KMSKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("kmskey", req.NamespacedName)
 
 	// retrieve the KMSKey resource to reconcile.

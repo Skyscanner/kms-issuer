@@ -74,3 +74,7 @@ linters:
     - unused
     - varcheck
     - whitespace
+issues:
+  # Exclude scope checks in tests: "Using the variable on range scope `test` in function literal"
+  exclude:
+     - Using the variable on range scope `test` in function literal

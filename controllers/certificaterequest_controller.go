@@ -26,15 +26,21 @@ import (
 	kmsca "github.com/Skyscanner/kms-issuer/pkg/kmsca"
 	"github.com/go-logr/logr"
 	apiutil "github.com/jetstack/cert-manager/pkg/api/util"
-	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
+	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
 	pkiutil "github.com/jetstack/cert-manager/pkg/util/pki"
 	core "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/utils/clock"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+)
+
+const (
+	levelDebug = 4
 )
 
 // CertificateRequestReconciler reconciles a StepIssuer object.
@@ -43,6 +49,9 @@ type CertificateRequestReconciler struct {
 	Log      logr.Logger
 	Recorder record.EventRecorder
 	KMSCA    *kmsca.KMSCA
+
+	Clock                  clock.Clock
+	CheckApprovedCondition bool
 }
 
 // Annotation for generating RBAC role for writing Events
@@ -54,8 +63,7 @@ type CertificateRequestReconciler struct {
 // Reconcile will read and validate a KMSIssuer resource associated to the
 // CertificateRequest resource, and it will sign the CertificateRequest with the
 // provisioner in the KMSIssuer.
-func (r *CertificateRequestReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	ctx := context.Background()
+func (r *CertificateRequestReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("certificaterequests", req.NamespacedName)
 
 	// Fetch the CertificateRequest resource being reconciled.
@@ -77,6 +85,11 @@ func (r *CertificateRequestReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		return ctrl.Result{}, nil
 	}
 
+	shouldProcess, err := r.requestShouldBeProcessed(ctx, log, cr)
+	if err != nil || !shouldProcess {
+		return ctrl.Result{}, err
+	}
+
 	// If the certificate data is already set then we skip this request as it
 	// has already been completed in the past.
 	if len(cr.Status.Certificate) > 0 {
@@ -96,7 +109,7 @@ func (r *CertificateRequestReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		Namespace: req.Namespace,
 		Name:      cr.Spec.IssuerRef.Name,
 	}
-	if err := r.Client.Get(ctx, issNamespaceName, &issuer); err != nil {
+	if err = r.Client.Get(ctx, issNamespaceName, &issuer); err != nil {
 		log.Error(err, "failed to retrieve KMSIssuer resource", "namespace", req.Namespace, "name", cr.Spec.IssuerRef.Name)
 		_ = r.setStatus(ctx, cr, cmmeta.ConditionFalse, cmapi.CertificateRequestReasonPending, "Failed to retrieve KMSIssuer resource %s: %v", issNamespaceName, err)
 		return ctrl.Result{}, err
@@ -104,7 +117,7 @@ func (r *CertificateRequestReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 
 	// Check if the KMSIssuer resource has been marked Ready
 	if !issuer.Status.IsReady() {
-		err := fmt.Errorf("resource %s is not ready", issNamespaceName)
+		err = fmt.Errorf("resource %s is not ready", issNamespaceName)
 		log.Error(err, "failed to retrieve StepIssuer resource", "namespace", req.Namespace, "name", cr.Spec.IssuerRef.Name)
 		_ = r.setStatus(ctx, cr, cmmeta.ConditionFalse, cmapi.CertificateRequestReasonPending, "StepIssuer resource %s is not Ready", issNamespaceName)
 		return ctrl.Result{}, err
@@ -160,6 +173,64 @@ func (r *CertificateRequestReconciler) SetupWithManager(mgr ctrl.Manager) error 
 // 	}
 // 	return false
 // }
+
+// requestShouldBeProcessed will return false if the conditions on the request
+// mean that it should not be processed. If the request has been denied, it
+// will set the request failure time and add a Ready=False condition.
+func (r *CertificateRequestReconciler) requestShouldBeProcessed(ctx context.Context, log logr.Logger, cr *cmapi.CertificateRequest) (bool, error) {
+	dbg := log.V(levelDebug)
+
+	// Ignore CertificateRequest if it is already Ready
+	if apiutil.CertificateRequestHasCondition(cr, cmapi.CertificateRequestCondition{
+		Type:   cmapi.CertificateRequestConditionReady,
+		Status: cmmeta.ConditionTrue,
+	}) {
+		dbg.Info("CertificateRequest is Ready. Ignoring.")
+		return false, nil
+	}
+	// Ignore CertificateRequest if it is already Failed
+	if apiutil.CertificateRequestHasCondition(cr, cmapi.CertificateRequestCondition{
+		Type:   cmapi.CertificateRequestConditionReady,
+		Status: cmmeta.ConditionFalse,
+		Reason: cmapi.CertificateRequestReasonFailed,
+	}) {
+		dbg.Info("CertificateRequest is Failed. Ignoring.")
+		return false, nil
+	}
+	// Ignore CertificateRequest if it already has a Denied Ready Reason
+	if apiutil.CertificateRequestHasCondition(cr, cmapi.CertificateRequestCondition{
+		Type:   cmapi.CertificateRequestConditionReady,
+		Status: cmmeta.ConditionFalse,
+		Reason: cmapi.CertificateRequestReasonDenied,
+	}) {
+		dbg.Info("CertificateRequest already has a Ready condition with Denied Reason. Ignoring.")
+		return false, nil
+	}
+
+	// If CertificateRequest has been denied, mark the CertificateRequest as
+	// Ready=Denied and set FailureTime if not already.
+	if apiutil.CertificateRequestIsDenied(cr) {
+		dbg.Info("CertificateRequest has been denied. Marking as failed.")
+
+		if cr.Status.FailureTime == nil {
+			nowTime := metav1.NewTime(r.Clock.Now())
+			cr.Status.FailureTime = &nowTime
+		}
+
+		message := "The CertificateRequest was denied by an approval controller"
+		return false, r.setStatus(ctx, cr, cmmeta.ConditionFalse, cmapi.CertificateRequestReasonDenied, message)
+	}
+
+	if r.CheckApprovedCondition {
+		// If CertificateRequest has not been approved, exit early.
+		if !apiutil.CertificateRequestIsApproved(cr) {
+			dbg.Info("certificate request has not been approved")
+			return false, nil
+		}
+	}
+
+	return true, nil
+}
 
 func (r *CertificateRequestReconciler) setStatus(ctx context.Context, cr *cmapi.CertificateRequest, status cmmeta.ConditionStatus, reason, message string, args ...interface{}) error {
 	completeMessage := fmt.Sprintf(message, args...)

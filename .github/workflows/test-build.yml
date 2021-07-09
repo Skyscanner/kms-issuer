@@ -29,6 +29,14 @@ jobs:
           sudo mv /tmp/kubebuilder_${version}_${os}_${arch} /usr/local/kubebuilder
           export PATH=$PATH:/usr/local/kubebuilder/bin
 
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v2.5.2
+        with:
+          version: latest
+
+      - name: Create kind cluster
+        uses: helm/kind-action@v1.2.0
+
       - name: Test
         run: make test
 

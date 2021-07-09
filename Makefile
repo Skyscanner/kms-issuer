@@ -4,7 +4,7 @@ IMG ?= skyscanner/kms-issuer:dev
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true"
 # Use tmp kind cluster for testing
-USE_EXISTING_CLUSTER ?= "true"
+USE_EXISTING_CLUSTER ?= "false"
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))

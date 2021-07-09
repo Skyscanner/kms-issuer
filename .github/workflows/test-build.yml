@@ -34,9 +34,6 @@ jobs:
         with:
           version: latest
 
-      - name: Create kind cluster
-        uses: helm/kind-action@v1.2.0
-
       - name: Test
         run: make test
 

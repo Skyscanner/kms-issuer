@@ -38,10 +38,3 @@ repos:
         files: '.*\.go$'
         stages:
           - push
-      - id: travis
-        name: Run travis lint
-        entry: travis lint
-        language: system
-        files: '\.travis\.yml$'
-        stages:
-          - push

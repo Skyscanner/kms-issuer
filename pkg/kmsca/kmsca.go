@@ -41,7 +41,7 @@ const (
 	DefaultCertDuration = time.Hour * 24 * 365 * 3 // 3 year
 	// DefaultCertRenewalRatio is default ratio of time before the certificate
 	// is expected to be renewed
-	DefaultCertRenewalRatio = 2 / 3
+	DefaultCertRenewalRatio = 2.0 / 3
 )
 
 // KMSCA KMS Certificate Authority provides the API operation methods for implementation

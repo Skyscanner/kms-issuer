@@ -1,4 +1,5 @@
 run:
+  timeout: 5m
   deadline: 1m
   tests: true
   skip-dirs:
@@ -33,7 +34,13 @@ linters-settings:
   gomnd:
     settings:
       mnd:
-        checks: argument,case,condition,return,operation,assign
+        checks:
+          - argument
+          - case
+          - condition
+          - return
+          - operation
+          - assign
   govet:
     check-shadowing: true
   maligned:

@@ -24,6 +24,8 @@ spec:
   - name: v1alpha1
     served: true
     storage: true
+    subresources:
+      status: {}
     schema:
       openAPIV3Schema:
         description: KMSIssuer is the Schema for the kmsissuers API
@@ -142,6 +144,8 @@ spec:
   - name: v1alpha1
     served: true
     storage: true
+    subresources:
+      status: {}
     schema:
       openAPIV3Schema:
         description: KMSKey is the Schema for the kmskeys API

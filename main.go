@@ -52,6 +52,7 @@ func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
 	var enableApprovedCheck bool
+	var globalKmsIssuerNamespace string
 
 	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
@@ -59,6 +60,9 @@ func main() {
 			"Enabling this will ensure there is only one active controller manager.")
 	flag.BoolVar(&enableApprovedCheck, "enable-approved-check", true,
 		"Enable waiting for CertificateRequests to have an approved condition before signing.")
+	flag.StringVar(&globalKmsIssuerNamespace, "global-kmsissuer-namespace", "",
+		"Overwrite usage of the KmsIssuer in the namespace "+
+			"where the certificate was requested with a global namespace, e.g. default")
 	flag.Parse()
 
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
@@ -92,8 +96,9 @@ func main() {
 		Recorder: mgr.GetEventRecorderFor("certificaterequests-controller"),
 		KMSCA:    ca,
 
-		Clock:                  clock.RealClock{},
-		CheckApprovedCondition: enableApprovedCheck,
+		Clock:                       clock.RealClock{},
+		CheckApprovedCondition:      enableApprovedCheck,
+		UseGlobalKmsIssuerNamespace: globalKmsIssuerNamespace,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "CertificateRequest")
 		os.Exit(1)

@@ -50,8 +50,9 @@ type CertificateRequestReconciler struct {
 	Recorder record.EventRecorder
 	KMSCA    *kmsca.KMSCA
 
-	Clock                  clock.Clock
-	CheckApprovedCondition bool
+	Clock                       clock.Clock
+	CheckApprovedCondition      bool
+	UseGlobalKmsIssuerNamespace string
 }
 
 // Annotation for generating RBAC role for writing Events
@@ -105,8 +106,13 @@ func (r *CertificateRequestReconciler) Reconcile(ctx context.Context, req ctrl.R
 
 	// Fetch the KMSIssuer resource
 	issuer := kmsiapi.KMSIssuer{}
+	issuerNs := req.Namespace
+	// if global-kmsissuer-namespace is set use this namespace instead of the namespace where the certificate was requested
+	if r.UseGlobalKmsIssuerNamespace != "" {
+		issuerNs = r.UseGlobalKmsIssuerNamespace
+	}
 	issNamespaceName := types.NamespacedName{
-		Namespace: req.Namespace,
+		Namespace: issuerNs,
 		Name:      cr.Spec.IssuerRef.Name,
 	}
 	if err = r.Client.Get(ctx, issNamespaceName, &issuer); err != nil {

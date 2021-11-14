@@ -1,0 +1,9 @@
+apiVersion: cert-manager.skyscanner.net/v1alpha1
+kind: KMSIssuer
+metadata:
+  name: kms-issuer
+  namespace: istio-system
+spec:
+  keyId: {{ .Values.kmskeyID }} # same name as AWS
+  commonName: Root CA # The common name for the root certificate
+  duration: 87600h # 10 years

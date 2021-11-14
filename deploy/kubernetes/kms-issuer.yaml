@@ -503,7 +503,7 @@ spec:
         - --enable-leader-election
         command:
         - /manager
-        image: skyscanner/kms-issuer:dev
+        image: ghcr.io/skyscanner/kms-issuer:sha-3ee48e5
         name: manager
         resources:
           limits:

@@ -91,7 +91,7 @@ resource "helm_release" "kms_controller" {
 
     set {
       name  = "serviceAccount.arnRole"
-      value = "${module.oidc_kms_issuer.oidc_arn}"
+      value = "${module.iam_assumable_role_with_oidc.iam_role_arn"
     }
     
     # the value must be 'alias/<KSM_KEY_ALIAS>'

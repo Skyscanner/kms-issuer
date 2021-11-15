@@ -75,12 +75,6 @@ module "iam_assumable_role_with_oidc" {
   }
 }
 
-resource "null_resource" "install_kms_controller_crd" {
-  provisioner "local-exec" {
-    command = "kubectl apply -k ./config/crd"
-    interpreter = ["/bin/bash", "-c"]
-  }
-}
 
 resource "helm_release" "kms_controller" {
   depends_on  = [ null_resource.install_kms_controller_crd ]

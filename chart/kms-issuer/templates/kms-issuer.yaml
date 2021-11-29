@@ -1,0 +1,10 @@
+---
+apiVersion: cert-manager.skyscanner.net/v1alpha1
+kind: KMSIssuer
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  commonName: {{ .Values.commonName }}
+  duration: {{ .Values.duration }}
+  keyId: {{ .Values.keyID }}

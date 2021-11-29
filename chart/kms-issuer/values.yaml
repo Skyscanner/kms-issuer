@@ -1,0 +1,4 @@
+---
+commonName: KMS Issued Cluster Root CA # The common name for the root certificate
+duration: 87600h # 10 years
+keyID: "" # KMS key ID or alias

@@ -62,31 +62,33 @@ module "iam_assumable_role_with_oidc" {
   role_name = "example_role"
   provider_url = <YOUR_OIDC>
   tags = {
-
+    "name" = "kms-issuer-role"
   }
 }
 
 
 resource "helm_release" "kms_controller" {
-  depends_on  = [ null_resource.install_kms_controller_crd ]
-  name        = "kms-issuer"
+  name        = "kms-contoller"
   chart       = "./chart/kms-controller"
   namespace   = "kms-issuer-system"
   cleanup_on_fail = true
 
     set {
       name  = "serviceAccount.arnRole"
-      value = "${module.iam_assumable_role_with_oidc.iam_role_arn"
+      value = "${module.iam_assumable_role_with_oidc.iam_role_arn}"
     }
-    
-    # the value must be 'alias/<KSM_KEY_ALIAS>'
-    set {
-      name  = "kmskeyID"
-      value = "${aws_kms_alias.aws_kms_alias.name}"
-    }
-
   }
 
+  resource "helm_release" "kms_issuer" {
+  name        = "kms-issuer"
+  chart       = "./chart/kms-issuer"
+  namespace   = "<APP_NAMESPACE>"
+  cleanup_on_fail = true
+   # the value must be 'alias/<KSM_KEY_ALIAS>'
+    set {
+      name  = "keyID"
+      value = "${aws_kms_alias.aws_kms_alias.name}"
+    }
 
 ```
 
@@ -95,5 +97,5 @@ resource "helm_release" "kms_controller" {
 
 
     ```
-    helm upgrade kms-issuer . -n kms-issuer-system --set "serviceAccount.arnRole=<ARN_ROLE>" --set "kmskeyID=<KMS_KEY_ALIAS>"
+    helm upgrade kms-issuer . -n kms-issuer-system --set "serviceAccount.arnRole=<ARN_ROLE>" --set "keyID=<KMS_KEY_ALIAS>"
     ```

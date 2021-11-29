@@ -1,18 +1,9 @@
 # kms-controller chart
 
-* pre-requsites - 
-    1. create kms-key from terraform or manualy
-    2. create role with webidentity from terraform or manualy
-    3. create namespace from terraform or manualy
-    4. run crd files (make install) or from terrafrom
-
 * terrafrom example:
 
 ```terraform
-data "kubernetes_all_namespaces" "kms-issuer-system" {}
 resource "kubernetes_namespace" "kms-issuer-system" {
-  # Only create namespace if namespace does not exist
-  count = contains([data.kubernetes_all_namespaces.kms-issuer-system.namespaces], "kms-issuer-system") ? 0 : 1
   metadata {
       name = "kms-issuer-system"
     }

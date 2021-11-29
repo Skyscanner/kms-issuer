@@ -91,11 +91,3 @@ resource "helm_release" "kms_controller" {
     }
 
 ```
-
-
-* install manuly:
-
-
-    ```
-    helm upgrade kms-issuer . -n kms-issuer-system --set "serviceAccount.arnRole=<ARN_ROLE>" --set "keyID=<KMS_KEY_ALIAS>"
-    ```

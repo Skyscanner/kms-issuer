@@ -2,7 +2,7 @@ apiVersion: cert-manager.skyscanner.net/v1alpha1
 kind: KMSIssuer
 metadata:
   name: kms-issuer
-  namespace: {{ .Release.Namespace }} # can be changed to app namespace if needed
+  namespace: {{ .Release.Namespace }} 
 spec:
   keyId: {{ .Values.kmskeyID }} # same name as AWS
   commonName: Root CA # The common name for the root certificate

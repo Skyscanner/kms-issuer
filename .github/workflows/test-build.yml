@@ -19,15 +19,9 @@ jobs:
 
       - name: Install kubebuilder
         run: |
-          set -x
-          version=2.3.1
-          os=$(go env GOOS)
-          arch=$(go env GOARCH)
-          curl -Ls https://go.kubebuilder.io/dl/${version}/${os}/${arch} -o /tmp/kubebuilder_${version}.tar.gz
-          shasum -a 256 -c kubebuilder_sha256.txt
-          tar -xzf /tmp/kubebuilder_${version}.tar.gz -C /tmp/
-          sudo mv /tmp/kubebuilder_${version}_${os}_${arch} /usr/local/kubebuilder
-          export PATH=$PATH:/usr/local/kubebuilder/bin
+          curl -L -o kubebuilder https://go.kubebuilder.io/dl/latest/$(go env GOOS)/$(go env GOARCH)
+          chmod +x kubebuilder
+          mv kubebuilder /usr/local/bin/
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v2.5.2

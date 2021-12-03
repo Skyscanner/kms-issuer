@@ -1,10 +1,25 @@
 domain: skyscanner.net
+layout:
+- go.kubebuilder.io/v3
+projectName: kms-issuer
 repo: github.com/Skyscanner/kms-issuer
 resources:
-- group: cert-manager
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: skyscanner.net
+  group: cert-manager.skyscanner.net
   kind: KMSIssuer
+  path: github.com/Skyscanner/kms-issuer/api/v1alpha1
   version: v1alpha1
-- group: cert-manager
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: skyscanner.net
+  group: cert-manager.skyscanner.net
   kind: KMSKey
+  path: github.com/Skyscanner/kms-issuer/api/v1alpha1
   version: v1alpha1
-version: "2"
+version: "3"

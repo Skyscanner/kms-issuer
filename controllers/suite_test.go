@@ -35,7 +35,7 @@ import (
 	kmsca "github.com/Skyscanner/kms-issuer/pkg/kmsca"
 	mocks "github.com/Skyscanner/kms-issuer/pkg/kmsmock"
 
-	certmanager "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
+	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 
 	certmanagerv1alpha1 "github.com/Skyscanner/kms-issuer/api/v1alpha1"
 	// +kubebuilder:scaffold:imports
@@ -76,7 +76,7 @@ var _ = BeforeSuite(func() {
 
 	err = certmanagerv1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
-	err = certmanager.AddToScheme(scheme.Scheme)
+	err = cmapi.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	//+kubebuilder:scaffold:scheme

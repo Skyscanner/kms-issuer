@@ -36,7 +36,7 @@ import (
 	"github.com/Skyscanner/kms-issuer/controllers"
 	"github.com/Skyscanner/kms-issuer/pkg/kmsca"
 	"github.com/aws/aws-sdk-go/aws/session"
-	certmanager "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
+	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -48,7 +48,7 @@ var (
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
-	utilruntime.Must(certmanager.AddToScheme(scheme))
+	utilruntime.Must(cmapi.AddToScheme(scheme))
 	utilruntime.Must(certmanagerskyscannernetv1alpha1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }

@@ -19,7 +19,8 @@ jobs:
 
       - name: Install kubebuilder
         run: |
-          curl -L -o kubebuilder https://go.kubebuilder.io/dl/latest/$(go env GOOS)/$(go env GOARCH)
+          version=3.2.0
+          curl -L -o kubebuilder https://go.kubebuilder.io/dl/${version}/$(go env GOOS)/$(go env GOARCH)
           chmod +x kubebuilder
           mv kubebuilder /usr/local/bin/
 

@@ -1,0 +1,9 @@
+apiVersion: cert-manager.skyscanner.net/v1alpha1
+kind: KMSIssuer
+metadata:
+  name: kms-issuer-sample
+  namespace: default
+spec:
+  commonName: Test Root CA
+  duration: 87600h # 10 years
+  keyId: a9695e53-9355-4f6e-8b60-dec3b19912b3

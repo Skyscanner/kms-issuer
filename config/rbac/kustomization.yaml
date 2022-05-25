@@ -16,3 +16,8 @@ resources:
 - auth_proxy_role.yaml
 - auth_proxy_role_binding.yaml
 - auth_proxy_client_clusterrole.yaml
+# The follow ClusterRole and ClusterRoleBinding apply to the cert-manager
+# deployment. This grants the certmanager certificaterequest-approver permission
+# to auto approve csrs for where any KMSIssuer is referenced
+- cert-manager-approver-role.yaml
+- cert-manager-approver-role-binding.yaml

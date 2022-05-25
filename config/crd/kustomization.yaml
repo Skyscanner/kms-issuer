@@ -3,6 +3,7 @@
 # It should be run by config/default
 resources:
 - bases/cert-manager.skyscanner.net_kmsissuers.yaml
+- bases/cert-manager.skyscanner.net_kmskeys.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:

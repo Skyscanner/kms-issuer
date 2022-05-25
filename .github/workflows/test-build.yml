@@ -17,13 +17,6 @@ jobs:
         with:
           go-version: ^1.17
 
-      - name: Install kubebuilder
-        run: |
-          version=3.4.1
-          curl -L -o kubebuilder https://go.kubebuilder.io/dl/${version}/$(go env GOOS)/$(go env GOARCH)
-          chmod +x kubebuilder
-          mv kubebuilder /usr/local/bin/
-
       - name: Test
         run: make test
 

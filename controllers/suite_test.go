@@ -61,7 +61,7 @@ var _ = BeforeSuite(func() {
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 	ctx, cancel = context.WithCancel(context.TODO())
 
-	_, ok := os.LookupEnv("AWS_AUTH_MANAGER_USE_EXISTING_CLUSTER")
+	_, ok := os.LookupEnv("KMS_ISSUER_USE_EXISTING_CLUSTER")
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{

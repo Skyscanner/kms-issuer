@@ -16,7 +16,7 @@ endif
 all: manager
 
 # Run tests
-test: generate tidy fmt lint manifests
+test: generate tidy fmt manifests
 ifeq ($(USE_EXISTING_CLUSTER), "true")
 	kind create cluster --name kms-issuer-test && \
 		USE_EXISTING_CLUSTER=$(USE_EXISTING_CLUSTER) go test ./... -coverprofile cover.out
@@ -63,10 +63,6 @@ fmt:
 # Run go vet against code
 vet:
 	go vet ./...
-
-# Run golangci-lint against code
-lint: vet
-	golangci-lint run --fix --timeout 2m
 
 # Generate code
 generate: controller-gen

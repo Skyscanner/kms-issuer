@@ -35,6 +35,8 @@ import (
 	certmanagerskyscannernetv1alpha1 "github.com/Skyscanner/kms-issuer/api/v1alpha1"
 	"github.com/Skyscanner/kms-issuer/controllers"
 	"github.com/Skyscanner/kms-issuer/pkg/kmsca"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 	//+kubebuilder:scaffold:imports
@@ -59,6 +61,7 @@ func main() {
 	var metricsAddr string
 	var enableLeaderElection, enableApprovedCheck bool
 	var probeAddr string
+	var localstack bool
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
@@ -66,6 +69,8 @@ func main() {
 			"Enabling this will ensure there is only one active controller manager.")
 	flag.BoolVar(&enableApprovedCheck, "enable-approved-check", true,
 		"Enable waiting for CertificateRequests to have an approved condition before signing.")
+	flag.BoolVar(&localstack, "localstack", false,
+		"Use localstack aws endpoints for local testing")
 	opts := zap.Options{
 		Development: true,
 	}
@@ -88,9 +93,25 @@ func main() {
 	}
 
 	// Create a new aws session
-	sess := session.Must(session.NewSessionWithOptions(session.Options{
-		SharedConfigState: session.SharedConfigEnable,
-	}))
+	var sess *session.Session
+	if localstack {
+		// Testing mode
+		sess = session.Must(session.NewSessionWithOptions(session.Options{
+			Config: aws.Config{
+				Region:           aws.String("us-east-1"),
+				Credentials:      credentials.NewStaticCredentials("test", "test", ""),
+				S3ForcePathStyle: aws.Bool(true),
+				Endpoint:         aws.String("http://localhost:8082"),
+				// Endpoint:         aws.String("http://localstack.localstack.svc.cluster.local:4566"),
+			},
+			SharedConfigState: session.SharedConfigEnable,
+		}))
+	} else {
+		// Production mode
+		sess = session.Must(session.NewSessionWithOptions(session.Options{
+			SharedConfigState: session.SharedConfigEnable,
+		}))
+	}
 	ca := kmsca.NewKMSCA(sess)
 
 	if err = (controllers.NewKMSIssuerReconciler(mgr, ca)).SetupWithManager(mgr); err != nil {

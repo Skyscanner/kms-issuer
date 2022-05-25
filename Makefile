@@ -92,7 +92,7 @@ ifeq (, $(shell which controller-gen))
 	go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.9.0 ;\
 	rm -rf $$CONTROLLER_GEN_TMP_DIR ;\
 	}
-CONTROLLER_GEN=$(GOBIN)/bin/controller-gen
+CONTROLLER_GEN=$(GOBIN)/controller-gen
 else
 CONTROLLER_GEN=$(shell which controller-gen)
 endif

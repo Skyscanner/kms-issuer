@@ -76,8 +76,8 @@ func (ca *KMSCA) CreateKey(input *CreateKeyInput) (string, error) {
 	}
 	// Create the KMS key
 	keyInput := &kms.CreateKeyInput{
-		KeyUsage:              aws.String(kms.KeyUsageTypeSignVerify),
-		CustomerMasterKeySpec: aws.String(kms.CustomerMasterKeySpecRsa2048),
+		KeyUsage: aws.String(kms.KeyUsageTypeSignVerify),
+		KeySpec:  aws.String(kms.CustomerMasterKeySpecRsa2048),
 	}
 	if len(input.CustomerMasterKeySpec) > 0 {
 		keyInput.KeySpec = aws.String(input.CustomerMasterKeySpec)

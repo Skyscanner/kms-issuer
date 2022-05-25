@@ -17,80 +17,73 @@ limitations under the License.
 package v1alpha1
 
 import (
-	. "github.com/onsi/ginkgo"
+	"testing"
+
 	. "github.com/onsi/gomega"
 )
 
-// These tests are written in BDD-style using Ginkgo framework. Refer to
-// http://onsi.github.io/ginkgo to learn more.
+func TestStatusShouldAddNewConditions(t *testing.T) {
+	g := NewWithT(t)
+	status := &Status{}
+	oups := NewCondition(ConditionReady, ConditionFalse, KMSIssuerReasonFailed, "oups")
+	status.SetCondition(&oups)
+	g.Expect(status.Conditions[0]).To(Equal(oups))
+	g.Expect(len(status.Conditions)).To(Equal(1))
+}
 
-var _ = Describe("Status", func() {
+func TestShouldReplacePreExistingConditions(t *testing.T) {
+	g := NewWithT(t)
+	status := &Status{}
+	empty := NewCondition(ConditionReady, ConditionTrue, KMSIssuerReasonIssued, "")
+	status.SetCondition(&empty)
+	oups := NewCondition(ConditionReady, ConditionFalse, KMSIssuerReasonFailed, "oups")
+	status.SetCondition(&oups)
+	g.Expect(status.Conditions[0]).To(Equal(oups))
+	g.Expect(len(status.Conditions)).To(Equal(1))
+}
 
-	BeforeEach(func() {
-		// Add any setup steps that needs to be executed before each test
-	})
+// should not update the condition if it already exists and has the same status and reason.
+func TestShouldNotUpdateExistingCondition(t *testing.T) {
+	g := NewWithT(t)
+	status := &Status{}
+	because := NewCondition(ConditionReady, ConditionFalse, KMSIssuerReasonFailed, "because")
+	status.SetCondition(&because)
+	otherMsg := NewCondition(ConditionReady, ConditionFalse, KMSIssuerReasonFailed, "othermsg")
+	status.SetCondition(&otherMsg)
+	g.Expect(status.Conditions[0]).To(Equal(because))
+	g.Expect(len(status.Conditions)).To(Equal(1))
+}
 
-	AfterEach(func() {
-		// Add any teardown steps that needs to be executed after each test
-	})
+// GetCondition should return a condition by type
+func TestGetConditionShouldReturnByType(t *testing.T) {
+	g := NewWithT(t)
+	status := &Status{}
+	empty := NewCondition(ConditionReady, ConditionTrue, KMSIssuerReasonIssued, "")
+	status.SetCondition(&empty)
+	g.Expect(*status.GetCondition(ConditionReady)).To(Equal(empty))
+}
 
-	Context("Status", func() {
+// IsReady should return true when the Ready Condition is true
+func TestIsReadyShouldReturnTrue(t *testing.T) {
+	g := NewWithT(t)
+	status := &Status{}
+	empty := NewCondition(ConditionReady, ConditionTrue, KMSIssuerReasonIssued, "")
+	status.SetCondition(&empty)
+	g.Expect(status.IsReady()).To(BeTrue())
+}
 
-		Describe("SetCondition", func() {
-			It("should add a new conditions", func() {
-				status := &Status{}
-				oups := NewCondition(ConditionReady, ConditionFalse, KMSIssuerReasonFailed, "oups")
-				status.SetCondition(&oups)
-				Expect(status.Conditions[0]).To(Equal(oups))
-				Expect(len(status.Conditions)).To(Equal(1))
-			})
+// "IsReady should return false with the Ready Condition is false
+func TestIsReadyConditionIsFalse(t *testing.T) {
+	g := NewWithT(t)
+	status := &Status{}
+	empty := NewCondition(ConditionReady, ConditionFalse, KMSIssuerReasonIssued, "")
+	status.SetCondition(&empty)
+	g.Expect(status.IsReady()).To(BeFalse())
+}
 
-			It("should replace a pre-existing conditions", func() {
-				status := &Status{}
-				empty := NewCondition(ConditionReady, ConditionTrue, KMSIssuerReasonIssued, "")
-				status.SetCondition(&empty)
-				oups := NewCondition(ConditionReady, ConditionFalse, KMSIssuerReasonFailed, "oups")
-				status.SetCondition(&oups)
-				Expect(status.Conditions[0]).To(Equal(oups))
-				Expect(len(status.Conditions)).To(Equal(1))
-			})
-
-			It("should not update the condition if it already exists and has the same status and reason.", func() {
-				status := &Status{}
-				because := NewCondition(ConditionReady, ConditionFalse, KMSIssuerReasonFailed, "because")
-				status.SetCondition(&because)
-				otherMsg := NewCondition(ConditionReady, ConditionFalse, KMSIssuerReasonFailed, "othermsg")
-				status.SetCondition(&otherMsg)
-				Expect(status.Conditions[0]).To(Equal(because))
-				Expect(len(status.Conditions)).To(Equal(1))
-			})
-		})
-		Describe("GetCondition", func() {
-			It("should return a condition by type", func() {
-				status := &Status{}
-				empty := NewCondition(ConditionReady, ConditionTrue, KMSIssuerReasonIssued, "")
-				status.SetCondition(&empty)
-				Expect(*status.GetCondition(ConditionReady)).To(Equal(empty))
-			})
-		})
-		Describe("IsReady", func() {
-			It("should return true when the Ready Condition is true", func() {
-				status := &Status{}
-				empty := NewCondition(ConditionReady, ConditionTrue, KMSIssuerReasonIssued, "")
-				status.SetCondition(&empty)
-				Expect(status.IsReady()).To(BeTrue())
-			})
-
-			It("should return false with the Ready Condition is false", func() {
-				status := &Status{}
-				empty := NewCondition(ConditionReady, ConditionFalse, KMSIssuerReasonIssued, "")
-				status.SetCondition(&empty)
-				Expect(status.IsReady()).To(BeFalse())
-			})
-			It("should return false with the Ready Condition is not set", func() {
-				status := &Status{}
-				Expect(status.IsReady()).To(BeFalse())
-			})
-		})
-	})
-})
+// IsReady should return false with the Ready Condition is not set
+func TestIsReadyConditionNotSet(t *testing.T) {
+	g := NewWithT(t)
+	status := &Status{}
+	g.Expect(status.IsReady()).To(BeFalse())
+}

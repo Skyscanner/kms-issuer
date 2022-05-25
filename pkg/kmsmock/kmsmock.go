@@ -132,7 +132,7 @@ func (m *KMSMock) GetPublicKey(input *kms.GetPublicKeyInput) (*kms.GetPublicKeyO
 	if key, ok := m.keys[aws.StringValue(input.KeyId)]; ok {
 		block, _ := pem.Decode(publicKey)
 		return &kms.GetPublicKeyOutput{
-			CustomerMasterKeySpec: key.CustomerMasterKeySpec,
+			CustomerMasterKeySpec: key.KeySpec,
 			KeyUsage:              key.KeyUsage,
 			PublicKey:             block.Bytes,
 		}, nil

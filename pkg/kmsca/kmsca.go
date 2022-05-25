@@ -80,7 +80,7 @@ func (ca *KMSCA) CreateKey(input *CreateKeyInput) (string, error) {
 		CustomerMasterKeySpec: aws.String(kms.CustomerMasterKeySpecRsa2048),
 	}
 	if len(input.CustomerMasterKeySpec) > 0 {
-		keyInput.CustomerMasterKeySpec = aws.String(input.CustomerMasterKeySpec)
+		keyInput.KeySpec = aws.String(input.CustomerMasterKeySpec)
 	}
 	if len(input.Description) > 0 {
 		keyInput.Description = aws.String(input.Description)

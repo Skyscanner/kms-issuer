@@ -27,7 +27,7 @@ jobs:
           version: latest
 
       - name: Build
-        run: make manager
+        run: make build
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v1

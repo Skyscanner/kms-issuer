@@ -12,9 +12,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2.3.4
 
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v3
         with:
-          go-version: ^1.14
+          go-version: ^1.17
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v1
@@ -22,7 +22,7 @@ jobs:
           languages: go
 
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v2.5.2
+        uses: golangci/golangci-lint-action@v3.2.0
         with:
           version: latest
 

@@ -211,7 +211,7 @@ func (r *KMSIssuerReconciler) manageSuccess(ctx context.Context, issuer *kmsiapi
 	r.Recorder.Event(issuer, core.EventTypeNormal, reason, msg)
 	ready := kmsiapi.NewCondition(kmsiapi.ConditionReady, kmsiapi.ConditionTrue, reason, msg)
 	issuer.Status.SetCondition(&ready)
-	return r.Client.Status().Update(ctx, issuer)
+	return r.patchIssuerStatus(ctx, issuer)
 }
 
 // manageFailure
@@ -222,5 +222,5 @@ func (r *KMSIssuerReconciler) manageFailure(ctx context.Context, issuer *kmsiapi
 	r.Recorder.Event(issuer, core.EventTypeWarning, reason, message)
 	ready := kmsiapi.NewCondition(kmsiapi.ConditionReady, kmsiapi.ConditionFalse, reason, message)
 	issuer.Status.SetCondition(&ready)
-	return r.Client.Status().Update(ctx, issuer)
+	return r.patchIssuerStatus(ctx, issuer)
 }

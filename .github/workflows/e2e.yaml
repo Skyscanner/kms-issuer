@@ -11,6 +11,7 @@ jobs:
     env:
       IMG: skyscanner/kms-issuer:dev
     steps:
+      - uses: actions/checkout@v3.0.2
 
       # Build testing docker image
       - name: Build the testing kms-issuer docker image

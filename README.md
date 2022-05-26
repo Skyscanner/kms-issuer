@@ -1,6 +1,7 @@
 # KMS Issuer
 
-[![Build Status](https://travis-ci.org/Skyscanner/kms-issuer.svg?branch=main)](https://travis-ci.org/Skyscanner/kms-issuer)
+[![Build Status](https://github.com/Skyscanner/kms-issuer/actions/workflows/test-build.yml/badge.svg?branch=main)](https://github.com/Skyscanner/kms-issuer/actions)
+[![CodeQL Status](https://github.com/Skyscanner/kms-issuer/actions/workflows/code-quality.yml/badge.svg?branch=main)](https://github.com/Skyscanner/kms-issuer/actions)
 
 KMS issuer is a [cert-manager](https://cert-manager.io/) Certificate Request controller that uses [AWS KMS](https://aws.amazon.com/kms/) to sign the certificate request.
 
@@ -53,13 +54,7 @@ spec:
 EOF
 ```
 
-4. Install the kms-issuer operator.
-
-```bash
-kubectl apply -f https://raw.githubusercontent.com/Skyscanner/kms-issuer/main/deploy/kubernetes/kms-issuer.yaml
-```
-
-5. Create a KMS issuer object
+4. Create a KMS issuer object
 
 ```yaml
 cat << EOF | kubectl apply -f -
@@ -87,7 +82,7 @@ kubectl get kmsissuer kms-issuer -o json | jq -r ".status.certificate" |  base64
 ```yaml
 cat << EOF | kubectl apply -f -
 ---
-apiVersion: cert-manager.io/v1alpha2
+apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: example-com
@@ -97,15 +92,17 @@ spec:
   secretName: example-com-tls
   duration: 8760h # 1 year
   renewBefore: 360h # 15d
-  organization:
-    - skyscanner
+  subject:
+    organizations:
+      - skyscanner
   # The use of the common name field has been deprecated since 2000 and is
   # discouraged from being used.
   commonName: example.com
   isCA: false
-  keySize: 2048
-  keyAlgorithm: rsa
-  keyEncoding: pkcs1
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS1
+    size: 2048
   usages:
     - server auth
     - client auth
@@ -113,7 +110,7 @@ spec:
   dnsNames:
     - example.com
     - www.example.com
-  uriSANs:
+  uris:
     - spiffe://cluster.local/ns/sandbox/sa/example
   ipAddresses:
     - 192.168.0.5

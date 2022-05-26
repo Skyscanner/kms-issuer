@@ -111,7 +111,7 @@ func (r *KMSKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		return ctrl.Result{}, r.manageFailure(ctx, log, kmsKey, err, "Failed to create the kms key")
 	}
 	kmsKey.Status.KeyID = keyID
-	if err := r.Client.Status().Update(ctx, kmsKey); err != nil {
+	if err := r.patchKeyStatus(ctx, kmsKey); err != nil {
 		return ctrl.Result{}, r.manageFailure(ctx, log, kmsKey, err, "Failed to update kmsKey.Status.KeyId")
 	}
 	return ctrl.Result{}, r.manageSuccess(ctx, log, kmsKey)
@@ -123,6 +123,20 @@ func (r *KMSKeyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
+// patchStatus updates the kmsiapi.KMSIssuer using a MergeFrom strategy
+func (r *KMSKeyReconciler) patchKeyStatus(ctx context.Context, issuer *kmsiapi.KMSKey) error {
+	var latest kmsiapi.KMSKey
+
+	if err := r.Client.Get(ctx, client.ObjectKeyFromObject(issuer), &latest); err != nil {
+		return err
+	}
+
+	patch := client.MergeFrom(latest.DeepCopy())
+	latest.Status = issuer.Status
+
+	return r.Client.Status().Patch(ctx, &latest, patch)
+}
+
 // manageSuccess
 func (r *KMSKeyReconciler) manageSuccess(ctx context.Context, log logr.Logger, kmskey *kmsiapi.KMSKey) error {
 	reason := kmsiapi.KMSKeyReasonIssued
@@ -131,7 +145,7 @@ func (r *KMSKeyReconciler) manageSuccess(ctx context.Context, log logr.Logger, k
 	r.Recorder.Event(kmskey, core.EventTypeNormal, reason, msg)
 	ready := kmsiapi.NewCondition(kmsiapi.ConditionReady, kmsiapi.ConditionTrue, reason, msg)
 	kmskey.Status.SetCondition(&ready)
-	return r.Client.Status().Update(ctx, kmskey)
+	return r.patchKeyStatus(ctx, kmskey)
 }
 
 // manageFailure
@@ -141,5 +155,5 @@ func (r *KMSKeyReconciler) manageFailure(ctx context.Context, log logr.Logger, k
 	r.Recorder.Event(kmskey, core.EventTypeWarning, reason, msg)
 	ready := kmsiapi.NewCondition(kmsiapi.ConditionReady, kmsiapi.ConditionFalse, reason, msg)
 	kmskey.Status.SetCondition(&ready)
-	return r.Client.Status().Update(ctx, kmskey)
+	return r.patchKeyStatus(ctx, kmskey)
 }

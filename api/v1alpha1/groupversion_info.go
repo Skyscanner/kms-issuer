@@ -1,5 +1,5 @@
 /*
-Copyright 2020 Skyscanner Limited.
+Copyright 2021.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,9 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package v1alpha1 contains API Schema definitions for the cert-manager v1alpha1 API group
-// +kubebuilder:object:generate=true
-// +groupName=cert-manager.skyscanner.net
+// Package v1alpha1 contains API Schema definitions for the cert-manager.skyscanner.net v1alpha1 API group
+//+kubebuilder:object:generate=true
+//+groupName=cert-manager.skyscanner.net
 package v1alpha1
 
 import (

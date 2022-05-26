@@ -1,5 +1,5 @@
 ---
-apiVersion: cert-manager.io/v1alpha2
+apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: example-com
@@ -9,29 +9,31 @@ spec:
   secretName: example-com-tls
   duration: 8760h # 1 year
   renewBefore: 360h # 15d
-  organization:
-  - skyscanner
+  subject:
+    organizations:
+      - skyscanner
   # The use of the common name field has been deprecated since 2000 and is
   # discouraged from being used.
   commonName: example.com
   isCA: false
-  keySize: 2048
-  keyAlgorithm: rsa
-  keyEncoding: pkcs1
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS1
+    size: 2048
   usages:
     - server auth
     - client auth
   # At least one of a DNS Name, URI, or IP address is required.
   dnsNames:
-  - example.com
-  - www.example.com
-  uriSANs:
-  - spiffe://cluster.local/ns/sandbox/sa/example
+    - example.com
+    - www.example.com
+  uris:
+    - spiffe://cluster.local/ns/sandbox/sa/example
   ipAddresses:
-  - 192.168.0.5
+    - 192.168.0.5
   # Issuer references are always required.
   issuerRef:
-    name: kms-issuer-sample
+    name: kms-issuer
     # We can reference ClusterIssuers by changing the kind here.
     # The default value is Issuer (i.e. a locally namespaced Issuer)
     kind: KMSIssuer

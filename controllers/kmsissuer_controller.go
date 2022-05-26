@@ -99,7 +99,7 @@ func (r *KMSIssuerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			return ctrl.Result{}, r.manageFailure(ctx, issuer, err, "Failed to generate the Certificate Authority Certificate")
 		}
 		issuer.Status.Certificate = pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: cert.Raw})
-		if err := r.Client.Status().Update(ctx, issuer); err != nil {
+		if err := r.patchIssuerStatus(ctx, issuer); err != nil {
 			return ctrl.Result{}, r.manageFailure(ctx, issuer, err, "Failed to update the issuer with the issued Certificate")
 		}
 	}
@@ -128,6 +128,20 @@ func (r *KMSIssuerReconciler) setIssuerDefaultValues(issuer *kmsiapi.KMSIssuer) 
 			Duration: renewBefore,
 		}
 	}
+}
+
+// patchStatus updates the kmsiapi.KMSIssuer using a MergeFrom strategy
+func (r *KMSIssuerReconciler) patchIssuerStatus(ctx context.Context, issuer *kmsiapi.KMSIssuer) error {
+	var latest kmsiapi.KMSIssuer
+
+	if err := r.Client.Get(ctx, client.ObjectKeyFromObject(issuer), &latest); err != nil {
+		return err
+	}
+
+	patch := client.MergeFrom(latest.DeepCopy())
+	latest.Status = issuer.Status
+
+	return r.Client.Status().Patch(ctx, &latest, patch)
 }
 
 // ParseCertificate parse the x509 certificate.
@@ -197,7 +211,7 @@ func (r *KMSIssuerReconciler) manageSuccess(ctx context.Context, issuer *kmsiapi
 	r.Recorder.Event(issuer, core.EventTypeNormal, reason, msg)
 	ready := kmsiapi.NewCondition(kmsiapi.ConditionReady, kmsiapi.ConditionTrue, reason, msg)
 	issuer.Status.SetCondition(&ready)
-	return r.Client.Status().Update(ctx, issuer)
+	return r.patchIssuerStatus(ctx, issuer)
 }
 
 // manageFailure
@@ -208,5 +222,5 @@ func (r *KMSIssuerReconciler) manageFailure(ctx context.Context, issuer *kmsiapi
 	r.Recorder.Event(issuer, core.EventTypeWarning, reason, message)
 	ready := kmsiapi.NewCondition(kmsiapi.ConditionReady, kmsiapi.ConditionFalse, reason, message)
 	issuer.Status.SetCondition(&ready)
-	return r.Client.Status().Update(ctx, issuer)
+	return r.patchIssuerStatus(ctx, issuer)
 }

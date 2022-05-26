@@ -1,0 +1,26 @@
+name: E2E Tests
+
+on:
+  pull_request:
+
+jobs:
+  e2e:
+    name: e2e
+    runs-on: ubuntu-latest
+    steps:
+      - name: Testing with an echo
+        run: echo hi
+      - name: Create k8s Kind Cluster
+        uses: helm/kind-action@v1.2.0
+        with:
+          node_image: kindest/node:v1.24.0
+      - name: Create local-kms namespace
+        run: kubectl create namespace local-kms
+      - name: Create local-kms deployment
+        run: kubectl create deployment local-kms -n local-kms --port 8080 --image nsmithuk/local-kms:3.11.2
+      - name: Create local-kms service
+        run: kubectl export deployment local-kms -n local-kms --port 8080
+      - name: Port Forward to local-kms service
+        run: kubectl port-forward svc/local-kms -n local-kms 8080:8080
+      - name: Test local-kms
+        run: aws --endpoint http://localhost:8080 kms list-keys

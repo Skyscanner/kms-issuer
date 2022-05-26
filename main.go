@@ -61,7 +61,7 @@ func main() {
 	var metricsAddr string
 	var enableLeaderElection, enableApprovedCheck bool
 	var probeAddr string
-	var localstack bool
+	var localAWSEndpoint string
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
@@ -69,8 +69,7 @@ func main() {
 			"Enabling this will ensure there is only one active controller manager.")
 	flag.BoolVar(&enableApprovedCheck, "enable-approved-check", true,
 		"Enable waiting for CertificateRequests to have an approved condition before signing.")
-	flag.BoolVar(&localstack, "localstack", false,
-		"Use localstack aws endpoints for local testing")
+	flag.StringVar(&localAWSEndpoint, "local-aws-endpoint", "", "local-kms endpoint for testing")
 	opts := zap.Options{
 		Development: true,
 	}
@@ -94,21 +93,20 @@ func main() {
 
 	// Create a new aws session
 	var sess *session.Session
-	if localstack {
-		// Testing mode
+	if localAWSEndpoint == "" {
+		// Production mode
 		sess = session.Must(session.NewSessionWithOptions(session.Options{
-			Config: aws.Config{
-				Region:           aws.String("us-east-1"),
-				Credentials:      credentials.NewStaticCredentials("test", "test", ""),
-				S3ForcePathStyle: aws.Bool(true),
-				Endpoint:         aws.String("http://localhost:8082"),
-				// Endpoint:         aws.String("http://localstack.localstack.svc.cluster.local:4566"),
-			},
 			SharedConfigState: session.SharedConfigEnable,
 		}))
 	} else {
-		// Production mode
+		// Testing mode
 		sess = session.Must(session.NewSessionWithOptions(session.Options{
+			Config: aws.Config{
+				Region:           aws.String("eu-west-1"),
+				Credentials:      credentials.NewStaticCredentials("test", "test", ""),
+				S3ForcePathStyle: aws.Bool(true),
+				Endpoint:         aws.String(localAWSEndpoint),
+			},
 			SharedConfigState: session.SharedConfigEnable,
 		}))
 	}

@@ -56,3 +56,13 @@ jobs:
         # See https://florian.ec/blog/github-actions-awscli-errors/
       - name: Test a KMSKey is created
         run: aws --endpoint http://localhost:8080 kms list-keys --region eu-west-1 --no-sign-request
+
+      - name: Apply KMSISsuer from sample
+        run: kubectl apply -f ./config/samples/cert-manager_v1alpha1_kmsissuer.yaml
+      - name: Wait for KMSIssuer to be ready
+        run: kubectl wait --for=condition=Ready kmsissuer/kms-issuer-sample
+
+      - name: Apply Certificate from sample
+        run: kubectl apply -f ./config/samples/certificate.yaml
+      - name: Wait for Certificate to be ready  
+        run: kubectl wait --for=condition=Ready certificate.cert-manager.io/example-com

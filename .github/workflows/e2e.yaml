@@ -34,8 +34,6 @@ jobs:
         run: kubectl expose deployment local-kms -n local-kms --port 8080
       - name: Wait for local-kms pod to be ready
         run: kubectl wait --for=condition=Ready -l app=local-kms -n local-kms pod
-      - name: port-forward to local-kms
-        run: kubectl port-forward -n local-kms svc/local-kms 8080 &
 
       - name: Install cert-manager
         run: kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.8.0/cert-manager.yaml
@@ -52,5 +50,8 @@ jobs:
         run: kubectl apply -f ./config/samples/cert-manager_v1alpha1_kmskey.yaml
       - name: Wait for key to be ready
         run: kubectl wait --for=condition=Ready kmskey/kmskey-sample
+
+      - name: port-forward to local-kms
+        run: kubectl port-forward -n local-kms svc/local-kms 8080 &
       - name: Test a KMSKey is created
         run: aws --endpoint http://localhost:8080 kms list-keys

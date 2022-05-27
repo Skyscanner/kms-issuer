@@ -44,9 +44,9 @@ jobs:
         run: make install
 
       - name: Set docker image to use in Kustomization
-        run: cd config/manager && ./bin/kustomize/ edit set image controller=${IMG}
+        run: make kustomize && cd config/manager && kustomize edit set image controller=${IMG}
       - name: Deploy kms-issuer
-        run: ./bin/kustomize/build config/testing | kubectl apply -f -
+        run: kustomize build config/testing | kubectl apply -f -
 
       - name: Apply KMSKey from samples
         run: kubectl apply -f ./config/samples/cert-manager_v1alpha1_kmskey.yaml

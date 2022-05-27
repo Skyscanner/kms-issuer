@@ -53,5 +53,6 @@ jobs:
 
       - name: port-forward to local-kms
         run: kubectl port-forward -n local-kms svc/local-kms 8080 &
+        # See https://florian.ec/blog/github-actions-awscli-errors/
       - name: Test a KMSKey is created
-        run: aws --endpoint http://localhost:8080 kms list-keys
+        run: aws --endpoint http://localhost:8080 kms list-keys --region eu-west-1 --no-sign-request

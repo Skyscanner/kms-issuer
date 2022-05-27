@@ -6,4 +6,4 @@ metadata:
 spec:
   commonName: Test Root CA
   duration: 87600h # 10 years
-  keyId: a9695e53-9355-4f6e-8b60-dec3b19912b3
+  keyId: alias/kms-issuer-example

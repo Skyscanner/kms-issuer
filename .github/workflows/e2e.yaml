@@ -1,0 +1,75 @@
+name: E2E Tests
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    name: e2e
+    runs-on: ubuntu-latest
+    env:
+      IMG: skyscanner/kms-issuer:dev
+    steps:
+      - uses: actions/checkout@v3.0.2
+
+      # Build testing docker image
+      - name: Build the testing kms-issuer docker image
+        run: docker build -t ${IMG} .
+
+      # Setup kind cluster
+      - name: Create k8s Kind Cluster
+        uses: helm/kind-action@v1.2.0
+        with:
+          cluster_name: kind
+      - name: Load test docker image into the kind cluster
+        run: kind load docker-image ${IMG}
+
+      # Install local-kms to the cluster
+      - name: Create local-kms namespace
+        run: kubectl create namespace local-kms
+      - name: Create local-kms deployment
+        run: kubectl create deployment local-kms -n local-kms --port 8080 --image nsmithuk/local-kms:3.11.2
+      - name: Create local-kms service
+        run: kubectl expose deployment local-kms -n local-kms --port 8080
+      - name: Wait for local-kms pod to be ready
+        run: kubectl wait --for=condition=Ready -l app=local-kms -n local-kms pod
+
+      - name: Install cert-manager
+        run: kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.8.0/cert-manager.yaml
+
+      - name: Install kms-issuer CRDs
+        run: make install
+
+      - name: Set docker image to use in Kustomization
+        run: make kustomize && cd config/manager && kustomize edit set image controller=${IMG}
+      - name: Deploy kms-issuer
+        run: kustomize build config/testing | kubectl apply -f -
+
+      - name: Apply KMSKey from samples
+        run: kubectl apply -f ./config/samples/cert-manager_v1alpha1_kmskey.yaml
+      - name: Wait for key to be ready
+        run: kubectl wait --for=condition=Ready kmskey/kmskey-sample
+
+      - name: port-forward to local-kms
+        run: kubectl port-forward -n local-kms svc/local-kms 8080 &
+        # See https://florian.ec/blog/github-actions-awscli-errors/
+      - name: Test a KMSKey is created
+        run: |
+          result=$(aws --endpoint http://localhost:8080 kms list-keys --region eu-west-1 --no-sign-request | jq '(.Keys | length) == 1')
+          if [[ "${result}" == true ]]; then
+            echo -n "Key created"
+          else
+            echo -n "Key not found"
+            exit 1
+          fi
+
+      - name: Apply KMSISsuer from sample
+        run: kubectl apply -f ./config/samples/cert-manager_v1alpha1_kmsissuer.yaml
+      - name: Wait for KMSIssuer to be ready
+        run: kubectl wait --for=condition=Ready kmsissuer/kms-issuer-sample
+
+      - name: Apply Certificate from sample
+        run: kubectl apply -f ./config/samples/certificate.yaml
+      - name: Wait for Certificate to be ready  
+        run: kubectl wait --for=condition=Ready certificate.cert-manager.io/example-com

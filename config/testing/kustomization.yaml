@@ -1,0 +1,12 @@
+# Kustomization used during testing which sets overrides for --local-aws-endpoint, etc.
+bases:
+- ../default
+
+patches:
+- patch: |-
+    - op: add
+      path: /spec/template/spec/containers/1/args/0
+      value: --local-aws-endpoint=http://local-kms.local-kms.svc.cluster.local:8080
+  target:
+    kind: Deployment
+    name: controller-manager

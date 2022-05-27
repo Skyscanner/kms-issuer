@@ -33,7 +33,7 @@ spec:
     - 192.168.0.5
   # Issuer references are always required.
   issuerRef:
-    name: kms-issuer
+    name: kms-issuer-sample
     # We can reference ClusterIssuers by changing the kind here.
     # The default value is Issuer (i.e. a locally namespaced Issuer)
     kind: KMSIssuer

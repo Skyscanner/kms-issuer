@@ -55,7 +55,14 @@ jobs:
         run: kubectl port-forward -n local-kms svc/local-kms 8080 &
         # See https://florian.ec/blog/github-actions-awscli-errors/
       - name: Test a KMSKey is created
-        run: aws --endpoint http://localhost:8080 kms list-keys --region eu-west-1 --no-sign-request
+        run: |
+          result=$(aws --endpoint http://localhost:8080 kms list-keys --region eu-west-1 --no-sign-request | jq '(.Keys | length) == 1')
+          if [[ "${result}" == true ]]; then
+            echo -n "Key created"
+          else
+            echo -n "Key not found"
+            exit 1
+          fi
 
       - name: Apply KMSISsuer from sample
         run: kubectl apply -f ./config/samples/cert-manager_v1alpha1_kmsissuer.yaml

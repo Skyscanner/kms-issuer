@@ -38,14 +38,12 @@ import (
 	"github.com/Skyscanner/kms-issuer/pkg/kmsca"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 	//+kubebuilder:scaffold:imports
 )
 
-var (
-	scheme   = runtime.NewScheme()
-	setupLog = ctrl.Log.WithName("setup")
-)
+var scheme = runtime.NewScheme()
 
 const webhookPort = 9943
 
@@ -70,13 +68,13 @@ func main() {
 	flag.BoolVar(&enableApprovedCheck, "enable-approved-check", true,
 		"Enable waiting for CertificateRequests to have an approved condition before signing.")
 	flag.StringVar(&localAWSEndpoint, "local-aws-endpoint", "", "local-kms endpoint for testing")
-	opts := zap.Options{
-		Development: true,
-	}
+	opts := zap.Options{Development: true}
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
 
+	// Set up logging and set up logger (use in this function only)
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+	setupLog := ctrl.Log.WithName("setup")
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
@@ -91,29 +89,33 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Create a new aws session
-	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-		if localAWSEndpoint != "" {
-			return aws.Endpoint{
-				PartitionID:   "aws",
-				URL:           localAWSEndpoint,
-				SigningRegion: "awsRegion",
-			}, nil
-		}
+	// If using a local endpoint we create a custom endpoint resolver, hard code
+	// the region and test credentials.
+	// Otherwise we leave the config loading to the default aws order (env vars,
+	// EC2 IMDS, etc.)
+	awsLoadConfigOpts := []func(*config.LoadOptions) error{}
+	if localAWSEndpoint != "" {
+		setupLog.Info("Using custom AWS Endpoint", "endpoint", localAWSEndpoint)
+		awsEndpointsResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+			return aws.Endpoint{PartitionID: "aws", URL: localAWSEndpoint, SigningRegion: "eu-west-1"}, nil
+		})
+		awsLoadConfigOpts = append(
+			awsLoadConfigOpts,
+			config.WithEndpointResolverWithOptions(awsEndpointsResolver),
+			config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider("test", "test", "test")),
+			config.WithRegion("eu-west-1"),
+		)
+	} else {
+		setupLog.Info("Using default AWS endpoint")
+	}
 
-		// returning EndpointNotFoundError will allow the service to fallback to its default resolution
-		return aws.Endpoint{}, &aws.EndpointNotFoundError{}
-	})
-	// Production mode
-	cfg, err := config.LoadDefaultConfig(
-		context.Background(),
-		config.WithEndpointResolverWithOptions(customResolver),
-		// config.WithRegion(awsRegion),
-	)
+	// Load the config with the given options and create a new KMSCA
+	cfg, err := config.LoadDefaultConfig(context.Background(), awsLoadConfigOpts...)
 	if err != nil {
 		setupLog.Error(err, "Error loading default aws config")
 		os.Exit(1)
 	}
+	setupLog.Info("Using region", "region", cfg.Region)
 	ca := kmsca.NewKMSCA(&cfg)
 
 	if err = (controllers.NewKMSIssuerReconciler(mgr, ca)).SetupWithManager(mgr); err != nil {

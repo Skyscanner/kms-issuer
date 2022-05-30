@@ -3,7 +3,7 @@ module github.com/Skyscanner/kms-issuer
 go 1.17
 
 require (
-	github.com/aws/aws-sdk-go v1.44.23
+	github.com/aws/aws-sdk-go v1.44.24
 	github.com/go-logr/logr v1.2.3
 	github.com/google/uuid v1.3.0
 	github.com/jetstack/cert-manager v1.7.2

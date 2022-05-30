@@ -21,9 +21,9 @@ import (
 	"time"
 
 	kmsiapi "github.com/Skyscanner/kms-issuer/api/v1alpha1"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
+	kmstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -116,10 +116,10 @@ var _ = Context("KMSKey", func() {
 			Expect(k8sClient.Delete(context.Background(), kmsKey)).Should(Succeed(), "failed to delete test KMSKey resource")
 			WaitForKMSKeyDeleted(key)
 			By("Checking the key and alias has been removed")
-			_, err := ca.Client.DescribeKey(&kms.DescribeKeyInput{
+			_, err := ca.Client.DescribeKey(context.TODO(), &kms.DescribeKeyInput{
 				KeyId: aws.String(kmsKey.Spec.AliasName),
 			})
-			Expect(err.(awserr.Error).Code()).To(Equal(kms.ErrCodeNotFoundException))
+			Expect(err).To(BeAssignableToTypeOf(&kmstypes.NotFoundException{}))
 		})
 	})
 })

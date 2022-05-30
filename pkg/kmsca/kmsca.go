@@ -17,6 +17,7 @@ limitations under the License.
 package kmsca
 
 import (
+	"context"
 	"crypto"
 	"crypto/rand"
 	"crypto/x509"
@@ -28,12 +29,11 @@ import (
 	"crypto/sha1" //nolint:gosec // Used for consistent hash
 	"math/big"
 
+	"github.com/Skyscanner/kms-issuer/pkg/interfaces"
 	"github.com/Skyscanner/kms-issuer/pkg/signer"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/client"
-	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/aws/aws-sdk-go/service/kms/kmsiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
+	kmstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 )
 
 const (
@@ -47,40 +47,44 @@ const (
 // KMSCA KMS Certificate Authority provides the API operation methods for implementation
 // a certificate authority on top of AWS KMS.
 type KMSCA struct {
-	Client kmsiface.KMSAPI
+	Client interfaces.KMSClient
 }
 
 // NewKMSCA creates a new instance of the KMSCA client with a session.
 // If additional configuration is needed for the client instance use the optional
 // aws.Config parameter to add your extra config.
-func NewKMSCA(p client.ConfigProvider, cfgs ...*aws.Config) *KMSCA {
+func NewKMSCA(cfg aws.Config) *KMSCA {
 	return &KMSCA{
-		Client: kms.New(p, cfgs...),
+		Client: kms.NewFromConfig(cfg),
 	}
 }
 
 // CreateKey creates an asymetric KMS key used to sign certificates and a KMS Alias pointing at the key.
 // The method only creates the key if the alias hasn't yet been created.
 // Returns the KeyID string
-func (ca *KMSCA) CreateKey(input *CreateKeyInput) (string, error) {
+func (ca *KMSCA) CreateKey(ctx context.Context, input *CreateKeyInput) (string, error) {
 	// Check if the key already exists
-	response, err := ca.Client.DescribeKey(&kms.DescribeKeyInput{
+	response, err := ca.Client.DescribeKey(ctx, &kms.DescribeKeyInput{
 		KeyId: aws.String(input.AliasName),
 	})
 	if err == nil {
 		// return existing key if one already exists
-		return aws.StringValue(response.KeyMetadata.KeyId), nil
+		return aws.ToString(response.KeyMetadata.KeyId), nil
 	}
-	if err.(awserr.Error).Code() != kms.ErrCodeNotFoundException {
+
+	// if the error isn't a NotFoundException then raise it
+	var nsk *kmstypes.NotFoundException
+	if !errors.As(err, &nsk) {
 		return "", err
 	}
+
 	// Create the KMS key
 	keyInput := &kms.CreateKeyInput{
-		KeyUsage: aws.String(kms.KeyUsageTypeSignVerify),
-		KeySpec:  aws.String(kms.CustomerMasterKeySpecRsa2048),
+		KeyUsage: kmstypes.KeyUsageTypeSignVerify,
+		KeySpec:  kmstypes.KeySpec(kmstypes.CustomerMasterKeySpecRsa2048),
 	}
 	if len(input.CustomerMasterKeySpec) > 0 {
-		keyInput.KeySpec = aws.String(input.CustomerMasterKeySpec)
+		keyInput.KeySpec = kmstypes.KeySpec(input.CustomerMasterKeySpec)
 	}
 	if len(input.Description) > 0 {
 		keyInput.Description = aws.String(input.Description)
@@ -90,28 +94,28 @@ func (ca *KMSCA) CreateKey(input *CreateKeyInput) (string, error) {
 	}
 	if len(input.Tags) > 0 {
 		for k, v := range input.Tags {
-			keyInput.Tags = append(keyInput.Tags, &kms.Tag{TagKey: aws.String(k), TagValue: aws.String(v)})
+			keyInput.Tags = append(keyInput.Tags, kmstypes.Tag{TagKey: aws.String(k), TagValue: aws.String(v)})
 		}
 	}
-	key, err := ca.Client.CreateKey(keyInput)
+	key, err := ca.Client.CreateKey(ctx, keyInput)
 	if err != nil {
 		return "", err
 	}
 	// Create the KMS alias
-	_, err = ca.Client.CreateAlias(&kms.CreateAliasInput{
+	_, err = ca.Client.CreateAlias(ctx, &kms.CreateAliasInput{
 		TargetKeyId: key.KeyMetadata.KeyId,
 		AliasName:   aws.String(input.AliasName),
 	})
 	if err != nil {
 		return "", err
 	}
-	return aws.StringValue(key.KeyMetadata.KeyId), nil
+	return aws.ToString(key.KeyMetadata.KeyId), nil
 }
 
 // DeleteKey delete a KMS key alias and the underlying target KMS Key.
-func (ca *KMSCA) DeleteKey(input *DeleteKeyInput) error {
+func (ca *KMSCA) DeleteKey(ctx context.Context, input *DeleteKeyInput) error {
 	// Check if the key already exists
-	response, err := ca.Client.DescribeKey(&kms.DescribeKeyInput{
+	response, err := ca.Client.DescribeKey(ctx, &kms.DescribeKeyInput{
 		KeyId: aws.String(input.AliasName),
 	})
 	if err != nil {
@@ -122,15 +126,15 @@ func (ca *KMSCA) DeleteKey(input *DeleteKeyInput) error {
 		KeyId: response.KeyMetadata.KeyId,
 	}
 	if input.PendingWindowInDays > 0 {
-		deleteInput.PendingWindowInDays = aws.Int64(int64(input.PendingWindowInDays))
+		deleteInput.PendingWindowInDays = aws.Int32(int32(input.PendingWindowInDays))
 	}
 
-	_, err = ca.Client.ScheduleKeyDeletion(deleteInput)
+	_, err = ca.Client.ScheduleKeyDeletion(ctx, deleteInput)
 	if err != nil {
 		return err
 	}
 	// Delete the KMS alias
-	_, err = ca.Client.DeleteAlias(&kms.DeleteAliasInput{
+	_, err = ca.Client.DeleteAlias(ctx, &kms.DeleteAliasInput{
 		AliasName: aws.String(input.AliasName),
 	})
 	if err != nil {
@@ -165,9 +169,9 @@ func (ca *KMSCA) GenerateCertificateAuthorityCertificate(input *GenerateCertific
 }
 
 // GenerateAndSignCertificateAuthorityCertificate returns the signed Certificate Authority Certificate
-func (ca *KMSCA) GenerateAndSignCertificateAuthorityCertificate(input *GenerateCertificateAuthorityCertificateInput) (*x509.Certificate, error) {
+func (ca *KMSCA) GenerateAndSignCertificateAuthorityCertificate(ctx context.Context, input *GenerateCertificateAuthorityCertificateInput) (*x509.Certificate, error) {
 	cert := ca.GenerateCertificateAuthorityCertificate(input)
-	newSigner, err := signer.New(ca.Client, input.KeyID)
+	newSigner, err := signer.New(ctx, ca.Client, input.KeyID)
 	if err != nil {
 		return nil, err
 	}
@@ -183,8 +187,8 @@ func (ca *KMSCA) GenerateAndSignCertificateAuthorityCertificate(input *GenerateC
 }
 
 // SignCertificate Signs a certificate request using KMS.
-func (ca *KMSCA) SignCertificate(input *IssueCertificateInput) (*x509.Certificate, error) {
-	newSigner, err := signer.New(ca.Client, input.KeyID)
+func (ca *KMSCA) SignCertificate(ctx context.Context, input *IssueCertificateInput) (*x509.Certificate, error) {
+	newSigner, err := signer.New(ctx, ca.Client, input.KeyID)
 	if err != nil {
 		return nil, err
 	}

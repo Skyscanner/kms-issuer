@@ -17,6 +17,7 @@ limitations under the License.
 package kmsca_test
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -27,9 +28,9 @@ import (
 
 	"github.com/Skyscanner/kms-issuer/pkg/kmsca"
 	mocks "github.com/Skyscanner/kms-issuer/pkg/kmsmock"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
+	kmstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -40,7 +41,7 @@ var _ = Context("KMSCA", func() {
 
 		It("should create a new KMS key and a Key Alias", func() {
 			client := mockKMSCA()
-			KeyID, err := client.CreateKey(&kmsca.CreateKeyInput{
+			KeyID, err := client.CreateKey(context.TODO(), &kmsca.CreateKeyInput{
 				AliasName: "alias/test-key",
 				Tags: map[string]string{
 					"Project": "k8s",
@@ -56,11 +57,11 @@ var _ = Context("KMSCA", func() {
 
 		It("should return existing key if one already exists", func() {
 			client := mockKMSCA()
-			KeyID, err := client.CreateKey(&kmsca.CreateKeyInput{
+			KeyID, err := client.CreateKey(context.TODO(), &kmsca.CreateKeyInput{
 				AliasName: "alias/test-key",
 			})
 			Expect(err).To(BeNil())
-			KeyID2, err := client.CreateKey(&kmsca.CreateKeyInput{
+			KeyID2, err := client.CreateKey(context.TODO(), &kmsca.CreateKeyInput{
 				AliasName: "alias/test-key",
 			})
 			Expect(err).To(BeNil())
@@ -71,20 +72,20 @@ var _ = Context("KMSCA", func() {
 
 		It("should delete the KMS key and a Key Alias", func() {
 			client := mockKMSCA()
-			KeyID, err := client.CreateKey(&kmsca.CreateKeyInput{
+			KeyID, err := client.CreateKey(context.TODO(), &kmsca.CreateKeyInput{
 				AliasName: "alias/test-key",
 			})
 			Expect(err).To(BeNil())
 			Expect(KeyID).NotTo(BeEmpty())
 
-			err = client.DeleteKey(&kmsca.DeleteKeyInput{
+			err = client.DeleteKey(context.TODO(), &kmsca.DeleteKeyInput{
 				AliasName: "alias/test-key",
 			})
 			Expect(err).To(BeNil())
-			_, err = client.Client.DescribeKey(&kms.DescribeKeyInput{
+			_, err = client.Client.DescribeKey(context.TODO(), &kms.DescribeKeyInput{
 				KeyId: aws.String("alias/test-key"),
 			})
-			Expect(err.(awserr.Error).Code()).To(Equal(kms.ErrCodeNotFoundException))
+			Expect(err).To(BeAssignableToTypeOf(&kmstypes.NotFoundException{}))
 		})
 	})
 
@@ -136,18 +137,21 @@ var _ = Context("KMSCA", func() {
 		It("should return a valid ca cert", func() {
 			By("creating a managed key")
 			client := mockKMSCA()
-			KeyID, _ := client.CreateKey(&kmsca.CreateKeyInput{
+			KeyID, _ := client.CreateKey(context.TODO(), &kmsca.CreateKeyInput{
 				AliasName: "alias/test-key",
 			})
 
 			By("calling GenerateAndSignCertificateAuthorityCertificate")
-			signed, err := client.GenerateAndSignCertificateAuthorityCertificate(&kmsca.GenerateCertificateAuthorityCertificateInput{
-				KeyID: KeyID,
-				Subject: pkix.Name{
-					CommonName: "Test CA",
+			signed, err := client.GenerateAndSignCertificateAuthorityCertificate(
+				context.TODO(),
+				&kmsca.GenerateCertificateAuthorityCertificateInput{
+					KeyID: KeyID,
+					Subject: pkix.Name{
+						CommonName: "Test CA",
+					},
+					Duration: time.Hour,
 				},
-				Duration: time.Hour,
-			})
+			)
 			Expect(signed).NotTo(BeNil())
 			Expect(err).To(BeNil())
 
@@ -167,18 +171,21 @@ var _ = Context("KMSCA", func() {
 		It("should return a signed certificate", func() {
 			By("creating a managed key")
 			client := mockKMSCA()
-			keyID, _ := client.CreateKey(&kmsca.CreateKeyInput{
+			keyID, _ := client.CreateKey(context.TODO(), &kmsca.CreateKeyInput{
 				AliasName: "alias/test-key",
 			})
 
 			By("calling GenerateAndSignCertificateAuthorityCertificate")
-			parent, _ := client.GenerateAndSignCertificateAuthorityCertificate(&kmsca.GenerateCertificateAuthorityCertificateInput{
-				KeyID: keyID,
-				Subject: pkix.Name{
-					CommonName: "Test CA",
+			parent, _ := client.GenerateAndSignCertificateAuthorityCertificate(
+				context.TODO(),
+				&kmsca.GenerateCertificateAuthorityCertificateInput{
+					KeyID: keyID,
+					Subject: pkix.Name{
+						CommonName: "Test CA",
+					},
+					Duration: time.Hour,
 				},
-				Duration: time.Hour,
-			})
+			)
 
 			By("creating a certificate")
 			cert := &x509.Certificate{
@@ -202,12 +209,15 @@ var _ = Context("KMSCA", func() {
 
 			By("signing the certificate")
 
-			signed, err := client.SignCertificate(&kmsca.IssueCertificateInput{
-				KeyID:     keyID,
-				Cert:      cert,
-				Parent:    parent,
-				PublicKey: certPrivKey.Public(),
-			})
+			signed, err := client.SignCertificate(
+				context.TODO(),
+				&kmsca.IssueCertificateInput{
+					KeyID:     keyID,
+					Cert:      cert,
+					Parent:    parent,
+					PublicKey: certPrivKey.Public(),
+				},
+			)
 			Expect(err).To(BeNil())
 			Expect(signed).NotTo(BeNil())
 

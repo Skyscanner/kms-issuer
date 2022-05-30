@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"flag"
 	"os"
 
@@ -35,9 +36,8 @@ import (
 	certmanagerskyscannernetv1alpha1 "github.com/Skyscanner/kms-issuer/api/v1alpha1"
 	"github.com/Skyscanner/kms-issuer/controllers"
 	"github.com/Skyscanner/kms-issuer/pkg/kmsca"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 	//+kubebuilder:scaffold:imports
 )
@@ -92,25 +92,29 @@ func main() {
 	}
 
 	// Create a new aws session
-	var sess *session.Session
-	if localAWSEndpoint == "" {
-		// Production mode
-		sess = session.Must(session.NewSessionWithOptions(session.Options{
-			SharedConfigState: session.SharedConfigEnable,
-		}))
-	} else {
-		// Testing mode
-		sess = session.Must(session.NewSessionWithOptions(session.Options{
-			Config: aws.Config{
-				Region:           aws.String("eu-west-1"),
-				Credentials:      credentials.NewStaticCredentials("test", "test", ""),
-				S3ForcePathStyle: aws.Bool(true),
-				Endpoint:         aws.String(localAWSEndpoint),
-			},
-			SharedConfigState: session.SharedConfigEnable,
-		}))
+	customResolver := aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
+		if localAWSEndpoint != "" {
+			return aws.Endpoint{
+				PartitionID:   "aws",
+				URL:           localAWSEndpoint,
+				SigningRegion: "awsRegion",
+			}, nil
+		}
+
+		// returning EndpointNotFoundError will allow the service to fallback to its default resolution
+		return aws.Endpoint{}, &aws.EndpointNotFoundError{}
+	})
+	// Production mode
+	cfg, err := config.LoadDefaultConfig(
+		context.Background(),
+		config.WithEndpointResolver(customResolver),
+		// config.WithRegion(awsRegion),
+	)
+	if err != nil {
+		setupLog.Error(err, "Error loading default aws config")
+		os.Exit(1)
 	}
-	ca := kmsca.NewKMSCA(sess)
+	ca := kmsca.NewKMSCA(cfg)
 
 	if err = (controllers.NewKMSIssuerReconciler(mgr, ca)).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "KMSIssuer")

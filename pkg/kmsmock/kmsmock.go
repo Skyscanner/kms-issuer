@@ -17,6 +17,7 @@ limitations under the License.
 package kmsmock
 
 import (
+	"context"
 	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
@@ -24,9 +25,10 @@ import (
 	"encoding/pem"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/aws/aws-sdk-go/service/kms/kmsiface"
+	"github.com/Skyscanner/kms-issuer/pkg/interfaces"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
+	kmstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"github.com/google/uuid"
 )
 
@@ -52,10 +54,12 @@ AL70wdUu5jMm2ex5cZGkZLRB50yE6rBiHCd5W1WdTFoe
 
 // KMSMock Define a simple mock of the KMS client
 type KMSMock struct {
-	kmsiface.KMSAPI
 	keys  map[string]*kms.CreateKeyInput
 	alias map[string]string
 }
+
+// Ensure KMSMock implements interface
+var _ interfaces.KMSClient = &KMSMock{}
 
 // New creates a new KMSMock instance
 func New() *KMSMock {
@@ -67,11 +71,11 @@ func New() *KMSMock {
 
 // CreateKey mocks of the KMS CreateKey method.
 // Returns a valid CreateKeyOutput response
-func (m *KMSMock) CreateKey(input *kms.CreateKeyInput) (*kms.CreateKeyOutput, error) {
+func (m *KMSMock) CreateKey(ctx context.Context, input *kms.CreateKeyInput, funcOpts ...func(*kms.Options)) (*kms.CreateKeyOutput, error) {
 	uid := uuid.New().String()
 	m.keys[uid] = input
 	return &kms.CreateKeyOutput{
-		KeyMetadata: &kms.KeyMetadata{
+		KeyMetadata: &kmstypes.KeyMetadata{
 			KeyId: aws.String(uid),
 		},
 	}, nil
@@ -79,70 +83,71 @@ func (m *KMSMock) CreateKey(input *kms.CreateKeyInput) (*kms.CreateKeyOutput, er
 
 // CreateAlias mocks of the KMS CreateAlias method.
 // Returns a valid CreateAliasOutput response
-func (m *KMSMock) CreateAlias(input *kms.CreateAliasInput) (*kms.CreateAliasOutput, error) {
-	m.alias[aws.StringValue(input.AliasName)] = aws.StringValue(input.TargetKeyId)
+func (m *KMSMock) CreateAlias(ctx context.Context, input *kms.CreateAliasInput, funcOpts ...func(*kms.Options)) (*kms.CreateAliasOutput, error) {
+	m.alias[aws.ToString(input.AliasName)] = aws.ToString(input.TargetKeyId)
 	return &kms.CreateAliasOutput{}, nil
 }
 
 // DeleteAlias mocks of the KMS DeleteAlias method.
 // Returns a valid DeleteAliasOutput response
-func (m *KMSMock) DeleteAlias(input *kms.DeleteAliasInput) (*kms.DeleteAliasOutput, error) {
-	delete(m.alias, aws.StringValue(input.AliasName))
+func (m *KMSMock) DeleteAlias(ctx context.Context, input *kms.DeleteAliasInput, funcOpts ...func(*kms.Options)) (*kms.DeleteAliasOutput, error) {
+	delete(m.alias, aws.ToString(input.AliasName))
 	return &kms.DeleteAliasOutput{}, nil
 }
 
 // DescribeKey mocks of the KMS DescribeKey method.
 // Returns a valid DescribeKeyOutput response
-func (m *KMSMock) DescribeKey(input *kms.DescribeKeyInput) (*kms.DescribeKeyOutput, error) {
-	keyID := aws.StringValue(input.KeyId)
+func (m *KMSMock) DescribeKey(ctx context.Context, input *kms.DescribeKeyInput, funcOpts ...func(*kms.Options)) (*kms.DescribeKeyOutput, error) {
+	keyID := aws.ToString(input.KeyId)
 	// fetch key id from alias
 	if strings.HasPrefix(keyID, "alias/") {
 		keyID = m.alias[keyID]
 		if keyID == "" {
-			return nil, &kms.NotFoundException{}
+			return nil, &kmstypes.NotFoundException{}
 		}
 	}
 	return &kms.DescribeKeyOutput{
-		KeyMetadata: &kms.KeyMetadata{
+		KeyMetadata: &kmstypes.KeyMetadata{
 			KeyId: aws.String(keyID),
 		},
 	}, nil
 }
 
 // ListResourceTags mocks of the KMS ListResourceTags method.
-func (m *KMSMock) ListResourceTags(input *kms.ListResourceTagsInput) (*kms.ListResourceTagsOutput, error) {
-	if key, ok := m.keys[aws.StringValue(input.KeyId)]; ok {
+func (m *KMSMock) ListResourceTags(ctx context.Context, input *kms.ListResourceTagsInput, funcOpts ...func(*kms.Options)) (*kms.ListResourceTagsOutput, error) {
+	if key, ok := m.keys[aws.ToString(input.KeyId)]; ok {
 		return &kms.ListResourceTagsOutput{
 			Tags: key.Tags,
 		}, nil
 	}
-	return nil, &kms.NotFoundException{}
+	return nil, &kmstypes.NotFoundException{}
 }
 
 // ScheduleKeyDeletion mocks of the KMS ScheduleKeyDeletion method.
-func (m *KMSMock) ScheduleKeyDeletion(input *kms.ScheduleKeyDeletionInput) (*kms.ScheduleKeyDeletionOutput, error) {
-	if _, ok := m.keys[aws.StringValue(input.KeyId)]; ok {
+func (m *KMSMock) ScheduleKeyDeletion(ctx context.Context, input *kms.ScheduleKeyDeletionInput, funcOpts ...func(*kms.Options)) (*kms.ScheduleKeyDeletionOutput, error) {
+	if _, ok := m.keys[aws.ToString(input.KeyId)]; ok {
 		return &kms.ScheduleKeyDeletionOutput{}, nil
 	}
-	return nil, &kms.NotFoundException{}
+	return nil, &kmstypes.NotFoundException{}
 }
 
 // GetPublicKey mocks of the KMS GetPublicKey method.
-func (m *KMSMock) GetPublicKey(input *kms.GetPublicKeyInput) (*kms.GetPublicKeyOutput, error) {
-	if key, ok := m.keys[aws.StringValue(input.KeyId)]; ok {
+func (m *KMSMock) GetPublicKey(ctx context.Context, input *kms.GetPublicKeyInput, funcOpts ...func(*kms.Options)) (*kms.GetPublicKeyOutput, error) {
+	if key, ok := m.keys[aws.ToString(input.KeyId)]; ok {
 		block, _ := pem.Decode(publicKey)
 		return &kms.GetPublicKeyOutput{
-			CustomerMasterKeySpec: key.KeySpec,
+			CustomerMasterKeySpec: kmstypes.CustomerMasterKeySpec(key.KeySpec),
+			KeySpec:               key.KeySpec,
 			KeyUsage:              key.KeyUsage,
 			PublicKey:             block.Bytes,
 		}, nil
 	}
-	return nil, &kms.NotFoundException{}
+	return nil, &kmstypes.NotFoundException{}
 }
 
 // Sign mocks of the KMS Sign method.
-func (m *KMSMock) Sign(input *kms.SignInput) (*kms.SignOutput, error) {
-	if _, ok := m.keys[aws.StringValue(input.KeyId)]; ok {
+func (m *KMSMock) Sign(ctx context.Context, input *kms.SignInput, funcOpts ...func(*kms.Options)) (*kms.SignOutput, error) {
+	if _, ok := m.keys[aws.ToString(input.KeyId)]; ok {
 		block, _ := pem.Decode(privateKey)
 		signer, _ := x509.ParsePKCS1PrivateKey(block.Bytes)
 		signature, _ := rsa.SignPKCS1v15(rand.Reader, signer, crypto.SHA256, input.Message)
@@ -150,5 +155,5 @@ func (m *KMSMock) Sign(input *kms.SignInput) (*kms.SignOutput, error) {
 			Signature: signature,
 		}, nil
 	}
-	return nil, &kms.NotFoundException{}
+	return nil, &kmstypes.NotFoundException{}
 }

@@ -47,7 +47,7 @@ var _ = Context("CertificateRequestReconciler", func() {
 	Describe("when a new CertificateRequest is created", func() {
 		It("should sign the certificate request", func() {
 			By("Creating a KMSIssuer")
-			keyID, err := ca.CreateKey(&kmsca.CreateKeyInput{
+			keyID, err := ca.CreateKey(context.TODO(), &kmsca.CreateKeyInput{
 				AliasName: "alias/test-key",
 			})
 			Expect(err).To(BeNil())

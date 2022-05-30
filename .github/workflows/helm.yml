@@ -1,10 +1,8 @@
-name: Test Helm Chart
+name: Helm Chart Tests
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
+  workflow_dispatch:
 
 jobs:
   test-build:

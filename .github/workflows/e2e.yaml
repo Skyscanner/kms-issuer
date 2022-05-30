@@ -76,4 +76,4 @@ jobs:
 
       - name: Logs of controller
         if: always()
-        run: kubectl logs deployment/kms-issuer-controller-manager -n kms-issuer-system
+        run: kubectl logs deployment/kms-issuer-controller-manager -n kms-issuer-system --all-containers

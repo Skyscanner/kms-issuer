@@ -53,9 +53,9 @@ type KMSCA struct {
 // NewKMSCA creates a new instance of the KMSCA client with a session.
 // If additional configuration is needed for the client instance use the optional
 // aws.Config parameter to add your extra config.
-func NewKMSCA(cfg aws.Config) *KMSCA {
+func NewKMSCA(cfg *aws.Config) *KMSCA {
 	return &KMSCA{
-		Client: kms.NewFromConfig(cfg),
+		Client: kms.NewFromConfig(*cfg),
 	}
 }
 

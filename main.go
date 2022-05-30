@@ -92,7 +92,7 @@ func main() {
 	}
 
 	// Create a new aws session
-	customResolver := aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
 		if localAWSEndpoint != "" {
 			return aws.Endpoint{
 				PartitionID:   "aws",
@@ -107,14 +107,14 @@ func main() {
 	// Production mode
 	cfg, err := config.LoadDefaultConfig(
 		context.Background(),
-		config.WithEndpointResolver(customResolver),
+		config.WithEndpointResolverWithOptions(customResolver),
 		// config.WithRegion(awsRegion),
 	)
 	if err != nil {
 		setupLog.Error(err, "Error loading default aws config")
 		os.Exit(1)
 	}
-	ca := kmsca.NewKMSCA(cfg)
+	ca := kmsca.NewKMSCA(&cfg)
 
 	if err = (controllers.NewKMSIssuerReconciler(mgr, ca)).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "KMSIssuer")

@@ -1,8 +1,10 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "kms-issuer.fullname" . }}
   labels:
+    control-plane: {{ include "kms-issuer.fullname" . }}-controller-manager
     {{- include "kms-issuer.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
@@ -10,52 +12,71 @@ spec:
   {{- end }}
   selector:
     matchLabels:
-      {{- include "kms-issuer.selectorLabels" . | nindent 6 }}
+      control-plane: {{ include "kms-issuer.fullname" . }}-controller-manager
   template:
     metadata:
       {{- with .Values.podAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      labels:
-        {{- include "kms-issuer.selectorLabels" . | nindent 8 }}
-    spec:
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
+  spec:
+    containers:
+    - args:
+      - --secure-listen-address=0.0.0.0:8443
+      - --upstream=http://127.0.0.1:8080/
+      - --logtostderr=true
+      - --v=10
+      image: gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0
+      name: kube-rbac-proxy
+      ports:
+      - containerPort: 8443
+        name: https
+        protocol: TCP
+    - command:
+      - /manager
+      - --health-probe-bind-address={{ .Values.healthProbeBindAddress }}
+      - --metrics-bind-address={{ .Values.metricsBindAddress }}
+      {{- if or (gt ( .Values.replicaCount | int64) 1) .Values.args.enableLeaderElection }}
+      - --enable-leader-election=true
       {{- end }}
-      serviceAccountName: {{ include "kms-issuer.serviceAccountName" . }}
+      - --enable-approved-check={{ .Values.enableApprovedCheck }}
+      - --local-aws-endpoint={{ .Values.localAwsEndpoit }}
+      image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        httpGet:
+          path: /healthz
+          port: 8081
+        initialDelaySeconds: 15
+        periodSeconds: 20
+      name: manager
+      ports:
+      - containerPort: 9443
+        name: webhook-server
+        protocol: TCP
+      readinessProbe:
+        httpGet:
+          path: /readyz
+          port: 8081
+        initialDelaySeconds: 5
+        periodSeconds: 10
+      resources:
+        {{- toYaml .Values.resources | nindent 12 }}
       securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      containers:
-        - name: {{ .Chart.Name }}
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          ports:
-            - name: http
-              containerPort: 80
-              protocol: TCP
-          livenessProbe:
-            httpGet:
-              path: /
-              port: http
-          readinessProbe:
-            httpGet:
-              path: /
-              port: http
-          resources:
-            {{- toYaml .Values.resources | nindent 12 }}
-      {{- with .Values.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        allowPrivilegeEscalation: false
+    securityContext:
+      runAsNonRoot: true
+    serviceAccountName: {{ include "aws-auth-manager.fullname" . }}-controller-manager
+    terminationGracePeriodSeconds: 10
+    {{- with .Values.nodeSelector }}
+    nodeSelector:
+      {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+    affinity:
+      {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+    tolerations:
+      {{- toYaml . | nindent 8 }}
+    {{- end }}

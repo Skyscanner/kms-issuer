@@ -10,8 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       IMG: skyscanner/kms-issuer:dev
-      REPOSITORY: skyscanner/kms-issuer
-      TAG: dev
       CERT_MANAGER_VERSION: v1.8.0
 
     steps:

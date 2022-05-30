@@ -12,6 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       IMG: skyscanner/kms-issuer:dev
+      REPOSITORY: skyscanner/kms-issuer
+      TAG: dev
       CERT_MANAGER_VERSION: v1.8.0
 
     steps:
@@ -65,7 +67,7 @@ jobs:
         if: steps.list-changed.outputs.changed == 'true'
 
       - name: Run chart-testing (install)
-        run: ct install --config ct.yaml
+        run: ct install --config ct.yaml --helm-extra-set-args "--set=img.repository=${REPOSITORY},--set=img.tag=${TAG}"
         if: steps.list-changed.outputs.changed == 'true'
 
   helm-docs:

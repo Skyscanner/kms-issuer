@@ -21,7 +21,7 @@ args:
   # -- The address the metric endpoint binds to.
   metricsBindAddress: :8080
   # -- Enable leader election for controller manager.
-  leaderElect: false
+  leaderElect: true
   # -- The address the probe endpoint binds to
   healthProbeBindAddress: :8081
   # -- Enable waiting for CertificateRequests to have an approved condition before signing

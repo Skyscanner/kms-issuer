@@ -39,7 +39,7 @@ spec:
         - /manager
         - --health-probe-bind-address={{ .Values.args.healthProbeBindAddress }}
         - --metrics-bind-address={{ .Values.args.metricsBindAddress }}
-        {{- if or (gt ( .Values.replicaCount | int64) 1) .Values.args.leaderElect }}
+        {{- if .Values.args.leaderElect }}
         - --leader-elect=true
         {{- end }}
         {{- if .Values.args.enableApprovedCheck }}

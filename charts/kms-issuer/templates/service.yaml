@@ -1,4 +1,3 @@
-{{- if .Values.enableMetricsRbacProxy }}
 ---
 apiVersion: v1
 kind: Service
@@ -15,4 +14,3 @@ spec:
     targetPort: https
   selector:
     control-plane: {{ include "kms-issuer.fullname" . }}-controller-manager
-{{- end }}

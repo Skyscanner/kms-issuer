@@ -51,14 +51,14 @@ spec:
         livenessProbe:
           httpGet:
             path: /healthz
-            port: 8081
+            port: {{ (split ":" .Values.args.healthProbeBindAddress)._1 }}
           initialDelaySeconds: 15
           periodSeconds: 20
         name: manager
         readinessProbe:
           httpGet:
             path: /readyz
-            port: 8081
+            port: {{ (split ":" .Values.args.healthProbeBindAddress)._1 }}
           initialDelaySeconds: 5
           periodSeconds: 10
         resources:

@@ -14,6 +14,7 @@ A Helm chart to install kms-issuer
 | args.leaderElect | bool | `false` | Enable leader election for controller manager. |
 | args.localAwsEndpoint | string | `""` | The address of a local-kms endpoint for testing |
 | args.metricsBindAddress | string | `":8080"` | The address the metric endpoint binds to. |
+| enableMetricsRbacProxy | bool | `false` | Enable an RBAC proxy to protect the metrics endpoint |
 | fullnameOverride | string | `""` |  |
 | image.pullPolicy | string | `"IfNotPresent"` |  |
 | image.repository | string | `"ghcr.io/skyscanner/kms-issuer"` |  |

@@ -1,0 +1,6 @@
+# Keep in sync with the IMG variable in .github/workflows/helm.yml
+image:
+  repository: skyscanner/kms-issuer
+  tag: dev
+
+enableMetricsRbacProxy: true

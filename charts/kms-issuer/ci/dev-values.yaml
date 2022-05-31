@@ -1,0 +1,11 @@
+# Keep in sync with the IMG variable in .github/workflows/helm.yml
+image:
+  repository: skyscanner/kms-issuer
+  tag: dev
+
+env:
+  - name: AWS_REGION
+    value: test-region
+
+podDisruptionBudget:
+  enable: true

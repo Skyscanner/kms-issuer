@@ -1,0 +1,77 @@
+# Default values for kms-issuer.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: ghcr.io/skyscanner/kms-issuer
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# -- Enable an RBAC proxy to protect the metrics endpoint
+enableMetricsRbacProxy: false
+
+args:
+  # -- The address the metric endpoint binds to.
+  metricsBindAddress: :8080
+  # -- Enable leader election for controller manager.
+  leaderElect: true
+  # -- The address the probe endpoint binds to
+  healthProbeBindAddress: :8081
+  # -- Enable waiting for CertificateRequests to have an approved condition before signing
+  enableApprovedCheck: true
+  # -- The address of a local-kms endpoint for testing
+  localAwsEndpoint: ""
+
+env:
+  # -- The AWS region the controller is deployed to
+  - name: AWS_REGION
+    value: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+certManagerApprovalRBAC:
+  # -- Enable a ClusterRoleBinding for cert-manager to approve CSR
+  enable: true
+  # -- The service account name that cert-manager is using
+  serviceAccountName: cert-manager
+  # -- The namespace where cert-manager service account is deployed
+  namespace: cert-manager
+
+podAnnotations: {}
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+podDisruptionBudget:
+  enable: false
+  minAvailable: 1
+  maxUnavailable: ""

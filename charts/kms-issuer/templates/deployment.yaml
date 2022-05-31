@@ -1,0 +1,87 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kms-issuer.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    control-plane: {{ include "kms-issuer.fullname" . }}-controller-manager
+    {{- include "kms-issuer.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      control-plane: {{ include "kms-issuer.fullname" . }}-controller-manager
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        control-plane: {{ include "kms-issuer.fullname" . }}-controller-manager
+    spec:
+      containers:
+      {{- if .Values.enableMetricsRbacProxy }}
+      - args:
+        - --secure-listen-address=0.0.0.0:8443
+        - --upstream=http://127.0.0.1:8080/
+        - --logtostderr=true
+        - --v=10
+        image: gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0
+        name: kube-rbac-proxy
+        ports:
+        - containerPort: 8443
+          name: https
+          protocol: TCP
+      {{- end }}
+      - command:
+        - /manager
+        - --health-probe-bind-address={{ .Values.args.healthProbeBindAddress }}
+        - --metrics-bind-address={{ .Values.args.metricsBindAddress }}
+        {{- if .Values.args.leaderElect }}
+        - --leader-elect=true
+        {{- end }}
+        {{- if .Values.args.enableApprovedCheck }}
+        - --enable-approved-check=true
+        {{- end }}
+        - --local-aws-endpoint={{ .Values.args.localAwsEndpoit }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        {{- with .Values.env }}
+        env:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: {{ (split ":" .Values.args.healthProbeBindAddress)._1 }}
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        name: manager
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: {{ (split ":" .Values.args.healthProbeBindAddress)._1 }}
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+        securityContext:
+          allowPrivilegeEscalation: false
+      securityContext:
+        runAsNonRoot: true
+      serviceAccountName: {{ include "kms-issuer.serviceAccountName" . }}
+      terminationGracePeriodSeconds: 10
+    {{- with .Values.nodeSelector }}
+    nodeSelector:
+      {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+    affinity:
+      {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+    tolerations:
+      {{- toYaml . | nindent 8 }}
+    {{- end }}

@@ -11,6 +11,28 @@ In this guide, we assume that you have a [Kubernetes](https://kubernetes.io/) en
 
 For any details on Cert-Manager, check the [official documentation](https://cert-manager.io/docs/usage/).
 
+## Install
+
+You can install the controller using the official helm chart:
+
+```console
+helm repo add kms-issuer 'https://skyscanner.github.io/kms-issuer'
+helm repo update
+```
+
+To install the chart with the release name `kmsrelease`:
+
+```console
+    # Create the infrabin namespace:
+
+    kubectl create namespace kms-issuer-system
+
+    Run helm install:
+
+    helm upgrade --install kmsrelease kms-issuer/kms-issuer \
+    --namespace kms-issuer-system
+```console
+
 ### Usage
 
 1. Install [cert-manager](https://cert-manager.io/docs/installation/). The operator has been tested with version v0.15.1

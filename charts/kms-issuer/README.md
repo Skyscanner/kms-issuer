@@ -11,9 +11,12 @@ A Helm chart to install kms-issuer
 | affinity | object | `{}` |  |
 | args.enableApprovedCheck | bool | `true` | Enable waiting for CertificateRequests to have an approved condition before signing |
 | args.healthProbeBindAddress | string | `":8081"` | The address the probe endpoint binds to |
-| args.leaderElect | bool | `false` | Enable leader election for controller manager. |
+| args.leaderElect | bool | `true` | Enable leader election for controller manager. |
 | args.localAwsEndpoint | string | `""` | The address of a local-kms endpoint for testing |
 | args.metricsBindAddress | string | `":8080"` | The address the metric endpoint binds to. |
+| certManagerApprovalRBAC.enable | bool | `true` | Enable a ClusterRoleBinding for cert-manager to approve CSR |
+| certManagerApprovalRBAC.namespace | string | `"cert-manager"` | The namespace where cert-manager service account is deployed |
+| certManagerApprovalRBAC.serviceAccountName | string | `"cert-manager"` | The service account name that cert-manager is using |
 | enableMetricsRbacProxy | bool | `false` | Enable an RBAC proxy to protect the metrics endpoint |
 | fullnameOverride | string | `""` |  |
 | image.pullPolicy | string | `"IfNotPresent"` |  |

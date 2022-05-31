@@ -135,6 +135,7 @@ subjects:
   name: {{ include "kms-issuer.serviceAccountName" . }}
   namespace: {{ .Release.Namespace }}
 {{- end }}
+{{- if .Values.certManagerApprovalRBAC.enable }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -160,8 +161,9 @@ roleRef:
   name: {{ include "kms-issuer.fullname" . }}-cert-manager-controller-approve
 subjects:
 - kind: ServiceAccount
-  name: cert-manager
-  namespace: cert-manager
+  name: {{ .Values.certManagerApprovalRBAC.serviceAccountName }}
+  namespace: {{ .Values.certManagerApprovalRBAC.namespace }}
+{{- end }}
 {{- if .Values.enableMetricsRbacProxy }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1

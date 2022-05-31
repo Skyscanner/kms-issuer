@@ -22,6 +22,7 @@ spec:
         control-plane: {{ include "kms-issuer.fullname" . }}-controller-manager
     spec:
       containers:
+      {{- if .Values.enableMetricsRbacProxy }}
       - args:
         - --secure-listen-address=0.0.0.0:8443
         - --upstream=http://127.0.0.1:8080/
@@ -33,6 +34,7 @@ spec:
         - containerPort: 8443
           name: https
           protocol: TCP
+      {{- endif }}
       - command:
         - /manager
         - --health-probe-bind-address={{ .Values.args.healthProbeBindAddress }}

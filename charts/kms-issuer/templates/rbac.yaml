@@ -171,19 +171,7 @@ rules:
   verbs:
   - get
 ---
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: {{ include "kms-issuer.fullname" . }}-metrics-reader
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: {{ include "kms-issuer.fullname" . }}-metrics-reader
-subjects:
-- kind: ServiceAccount
-  name: {{ include "kms-issuer.serviceAccountName" . }}
-  namespace: {{ .Release.Namespace }}
----
+{{- if .Values.enableMetricsRbacProxy }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -214,3 +202,4 @@ subjects:
 - kind: ServiceAccount
   name: {{ include "kms-issuer.serviceAccountName" . }}
   namespace: {{ .Release.Namespace }}
+{{- end }}

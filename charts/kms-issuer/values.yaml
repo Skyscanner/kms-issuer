@@ -14,6 +14,9 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
+# -- Enable an RBAC proxy to protect the metrics endpoint
+enableMetricsRbacProxy: false
+
 args:
   # -- The address the metric endpoint binds to.
   metricsBindAddress: :8080

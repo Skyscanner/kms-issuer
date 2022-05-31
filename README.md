@@ -2,6 +2,8 @@
 
 [![Build Status](https://github.com/Skyscanner/kms-issuer/actions/workflows/test-build.yml/badge.svg?branch=main)](https://github.com/Skyscanner/kms-issuer/actions)
 [![CodeQL Status](https://github.com/Skyscanner/kms-issuer/actions/workflows/code-quality.yml/badge.svg?branch=main)](https://github.com/Skyscanner/kms-issuer/actions)
+[![E2E Tests](https://github.com/Skyscanner/kms-issuer/actions/workflows/e2e.yaml/badge.svg?branch=main)](https://github.com/Skyscanner/kms-issuer/actions)
+[![Helm Chart Tests](https://github.com/Skyscanner/kms-issuer/actions/workflows/helm.yml/badge.svg?branch=main)](https://github.com/Skyscanner/kms-issuer/actions)
 
 KMS issuer is a [cert-manager](https://cert-manager.io/) Certificate Request controller that uses [AWS KMS](https://aws.amazon.com/kms/) to sign the certificate request.
 
@@ -20,18 +22,11 @@ helm repo add kms-issuer 'https://skyscanner.github.io/kms-issuer'
 helm repo update
 ```
 
-To install the chart with the release name `kmsrelease`:
+To install the chart with the release name `kms-issuer`:
 
 ```console
-    # Create the infrabin namespace:
-
-    kubectl create namespace kms-issuer-system
-
-    Run helm install:
-
-    helm upgrade --install kmsrelease kms-issuer/kms-issuer \
-    --namespace kms-issuer-system
-```console
+helm upgrade --install kms-issuer kms-issuer/kms-issuer --namespace kms-issuer-system --create-namespace
+```
 
 ### Usage
 

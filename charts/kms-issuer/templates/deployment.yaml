@@ -47,6 +47,10 @@ spec:
         {{- end }}
         - --local-aws-endpoint={{ .Values.args.localAwsEndpoit }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        {{- with .Values.env }}
+        env:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:

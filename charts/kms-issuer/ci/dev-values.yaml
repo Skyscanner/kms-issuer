@@ -2,3 +2,7 @@
 image:
   repository: skyscanner/kms-issuer
   tag: dev
+
+env:
+  - name: AWS_REGION
+    value: test-region

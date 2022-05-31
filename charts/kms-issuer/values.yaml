@@ -29,6 +29,11 @@ args:
   # -- The address of a local-kms endpoint for testing
   localAwsEndpoint: ""
 
+env:
+  # -- The AWS region the controller is deployed to
+  - name: AWS_REGION
+    value: ""
+
 serviceAccount:
   # Specifies whether a service account should be created
   create: true

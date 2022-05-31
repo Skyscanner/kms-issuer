@@ -18,6 +18,7 @@ A Helm chart to install kms-issuer
 | certManagerApprovalRBAC.namespace | string | `"cert-manager"` | The namespace where cert-manager service account is deployed |
 | certManagerApprovalRBAC.serviceAccountName | string | `"cert-manager"` | The service account name that cert-manager is using |
 | enableMetricsRbacProxy | bool | `false` | Enable an RBAC proxy to protect the metrics endpoint |
+| env[0] | object | `{"name":"AWS_REGION","value":""}` | The AWS region the controller is deployed to |
 | fullnameOverride | string | `""` |  |
 | image.pullPolicy | string | `"IfNotPresent"` |  |
 | image.repository | string | `"ghcr.io/skyscanner/kms-issuer"` |  |

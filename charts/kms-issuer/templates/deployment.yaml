@@ -34,7 +34,7 @@ spec:
         - containerPort: 8443
           name: https
           protocol: TCP
-      {{- endif }}
+      {{- end }}
       - command:
         - /manager
         - --health-probe-bind-address={{ .Values.args.healthProbeBindAddress }}

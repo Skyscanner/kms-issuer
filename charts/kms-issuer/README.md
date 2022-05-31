@@ -27,6 +27,9 @@ A Helm chart to install kms-issuer
 | nameOverride | string | `""` |  |
 | nodeSelector | object | `{}` |  |
 | podAnnotations | object | `{}` |  |
+| podDisruptionBudget.enable | bool | `false` |  |
+| podDisruptionBudget.maxUnavailable | string | `""` |  |
+| podDisruptionBudget.minAvailable | int | `1` |  |
 | replicaCount | int | `1` |  |
 | resources | object | `{}` |  |
 | serviceAccount.annotations | object | `{}` |  |

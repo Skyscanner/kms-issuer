@@ -70,3 +70,8 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+podDisruptionBudget:
+  enable: false
+  minAvailable: 1
+  maxUnavailable: ""

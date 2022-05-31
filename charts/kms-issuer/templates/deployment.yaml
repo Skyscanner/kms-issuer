@@ -3,13 +3,12 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "kms-issuer.fullname" . }}
+  namespace: {{ .Release.Namespace }}
   labels:
     control-plane: {{ include "kms-issuer.fullname" . }}-controller-manager
     {{- include "kms-issuer.labels" . | nindent 4 }}
 spec:
-  {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
-  {{- end }}
   selector:
     matchLabels:
       control-plane: {{ include "kms-issuer.fullname" . }}-controller-manager
@@ -19,57 +18,55 @@ spec:
       annotations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-  spec:
-    containers:
-    - args:
-      - --secure-listen-address=0.0.0.0:8443
-      - --upstream=http://127.0.0.1:8080/
-      - --logtostderr=true
-      - --v=10
-      image: gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0
-      name: kube-rbac-proxy
-      ports:
-      - containerPort: 8443
-        name: https
-        protocol: TCP
-    - command:
-      - /manager
-      - --health-probe-bind-address={{ .Values.args.healthProbeBindAddress }}
-      - --metrics-bind-address={{ .Values.args.metricsBindAddress }}
-      {{- if or (gt ( .Values.replicaCount | int64) 1) .Values.args.enableLeaderElection }}
-      - --enable-leader-election=true
-      {{- end }}
-      {{- if .Values.args.enableApprovedCheck }}
-      - --enable-approved-check=true
-      {{-end }}
-      - --local-aws-endpoint={{ .Values.args.localAwsEndpoit }}
-      image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-      imagePullPolicy: IfNotPresent
-      livenessProbe:
-        httpGet:
-          path: /healthz
-          port: 8081
-        initialDelaySeconds: 15
-        periodSeconds: 20
-      name: manager
-      ports:
-      - containerPort: 9443
-        name: webhook-server
-        protocol: TCP
-      readinessProbe:
-        httpGet:
-          path: /readyz
-          port: 8081
-        initialDelaySeconds: 5
-        periodSeconds: 10
-      resources:
-        {{- toYaml .Values.resources | nindent 12 }}
+      labels:
+        control-plane: {{ include "kms-issuer.fullname" . }}-controller-manager
+    spec:
+      containers:
+      - args:
+        - --secure-listen-address=0.0.0.0:8443
+        - --upstream=http://127.0.0.1:8080/
+        - --logtostderr=true
+        - --v=10
+        image: gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0
+        name: kube-rbac-proxy
+        ports:
+        - containerPort: 8443
+          name: https
+          protocol: TCP
+      - command:
+        - /manager
+        - --health-probe-bind-address={{ .Values.args.healthProbeBindAddress }}
+        - --metrics-bind-address={{ .Values.args.metricsBindAddress }}
+        {{- if or (gt ( .Values.replicaCount | int64) 1) .Values.args.leaderElect }}
+        - --leader-elect=true
+        {{- end }}
+        {{- if .Values.args.enableApprovedCheck }}
+        - --enable-approved-check=true
+        {{- end }}
+        - --local-aws-endpoint={{ .Values.args.localAwsEndpoit }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8081
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        name: manager
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8081
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+        securityContext:
+          allowPrivilegeEscalation: false
       securityContext:
-        allowPrivilegeEscalation: false
-    securityContext:
-      runAsNonRoot: true
-    serviceAccountName: {{ include "aws-auth-manager.fullname" . }}-controller-manager
-    terminationGracePeriodSeconds: 10
+        runAsNonRoot: true
+      serviceAccountName: {{ include "kms-issuer.serviceAccountName" . }}
+      terminationGracePeriodSeconds: 10
     {{- with .Values.nodeSelector }}
     nodeSelector:
       {{- toYaml . | nindent 8 }}

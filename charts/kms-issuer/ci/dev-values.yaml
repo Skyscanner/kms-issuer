@@ -2,3 +2,5 @@
 image:
   repository: skyscanner/kms-issuer
   tag: dev
+
+replicaCount: 2

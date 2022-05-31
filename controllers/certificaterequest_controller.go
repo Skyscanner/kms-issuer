@@ -135,12 +135,15 @@ func (r *CertificateRequestReconciler) Reconcile(ctx context.Context, req ctrl.R
 		return ctrl.Result{}, r.setStatus(ctx, cr, cmmeta.ConditionFalse, cmapi.CertificateRequestReasonFailed, "Failed to decode issuer public certificate: %v", err)
 	}
 
-	signed, err := r.KMSCA.SignCertificate(&kmsca.IssueCertificateInput{
-		KeyID:     issuer.Spec.KeyID,
-		Parent:    parent,
-		Cert:      cert,
-		PublicKey: cert.PublicKey,
-	})
+	signed, err := r.KMSCA.SignCertificate(
+		ctx,
+		&kmsca.IssueCertificateInput{
+			KeyID:     issuer.Spec.KeyID,
+			Parent:    parent,
+			Cert:      cert,
+			PublicKey: cert.PublicKey,
+		},
+	)
 	if err != nil {
 		log.Error(err, "failed to sign certificate request")
 		return ctrl.Result{}, r.setStatus(ctx, cr, cmmeta.ConditionFalse, cmapi.CertificateRequestReasonFailed, "Failed to sign certificate request: %v", err)

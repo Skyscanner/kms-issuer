@@ -17,6 +17,7 @@ limitations under the License.
 package kmsmock_test
 
 import (
+	"context"
 	"crypto"
 	"crypto/rsa"
 	"crypto/x509"
@@ -24,8 +25,9 @@ import (
 	"crypto/sha256"
 
 	mocks "github.com/Skyscanner/kms-issuer/pkg/kmsmock"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
+	kmstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -38,26 +40,26 @@ var _ = Context("KMSMock", func() {
 			By("Creating a new key")
 			client := mocks.New()
 			input := &kms.CreateKeyInput{
-				Tags: []*kms.Tag{
+				Tags: []kmstypes.Tag{
 					{
 						TagKey:   aws.String("foo"),
 						TagValue: aws.String("bar"),
 					},
 				},
 			}
-			key, err := client.CreateKey(input)
+			key, err := client.CreateKey(context.TODO(), input)
 			Expect(err).To(BeNil())
-			Expect(aws.StringValue(key.KeyMetadata.KeyId)).NotTo(BeEmpty())
+			Expect(aws.ToString(key.KeyMetadata.KeyId)).NotTo(BeEmpty())
 
 			By("Check the Tags")
-			tags, err := client.ListResourceTags(&kms.ListResourceTagsInput{
+			tags, err := client.ListResourceTags(context.TODO(), &kms.ListResourceTagsInput{
 				KeyId: key.KeyMetadata.KeyId,
 			})
 			Expect(err).To(BeNil())
 			Expect(tags.Tags).To(Equal(input.Tags))
 
 			By("Deleting the key")
-			_, err = client.ScheduleKeyDeletion(&kms.ScheduleKeyDeletionInput{
+			_, err = client.ScheduleKeyDeletion(context.TODO(), &kms.ScheduleKeyDeletionInput{
 				KeyId: key.KeyMetadata.KeyId,
 			})
 			Expect(err).To(BeNil())
@@ -67,32 +69,32 @@ var _ = Context("KMSMock", func() {
 			By("Creating a new key")
 			client := mocks.New()
 			input := &kms.CreateKeyInput{
-				Tags: []*kms.Tag{
+				Tags: []kmstypes.Tag{
 					{
 						TagKey:   aws.String("foo"),
 						TagValue: aws.String("bar"),
 					},
 				},
 			}
-			key, err := client.CreateKey(input)
+			key, err := client.CreateKey(context.TODO(), input)
 			Expect(err).To(BeNil())
-			Expect(aws.StringValue(key.KeyMetadata.KeyId)).NotTo(BeEmpty())
+			Expect(aws.ToString(key.KeyMetadata.KeyId)).NotTo(BeEmpty())
 
 			By("Create an alias")
-			_, err = client.CreateAlias(&kms.CreateAliasInput{
+			_, err = client.CreateAlias(context.TODO(), &kms.CreateAliasInput{
 				TargetKeyId: key.KeyMetadata.KeyId,
 				AliasName:   aws.String("alias/my-key"),
 			})
 			Expect(err).To(BeNil())
 
 			By("Describing the key")
-			output, err := client.DescribeKey(&kms.DescribeKeyInput{
+			output, err := client.DescribeKey(context.TODO(), &kms.DescribeKeyInput{
 				KeyId: aws.String("alias/my-key"),
 			})
 			Expect(err).To(BeNil())
-			Expect(aws.StringValue(output.KeyMetadata.KeyId)).To(Equal(aws.StringValue(key.KeyMetadata.KeyId)))
+			Expect(aws.ToString(output.KeyMetadata.KeyId)).To(Equal(aws.ToString(key.KeyMetadata.KeyId)))
 
-			_, err = client.DeleteAlias(&kms.DeleteAliasInput{
+			_, err = client.DeleteAlias(context.TODO(), &kms.DeleteAliasInput{
 				AliasName: aws.String("alias/my-key"),
 			})
 			Expect(err).To(BeNil())
@@ -101,12 +103,12 @@ var _ = Context("KMSMock", func() {
 		It("should sign a payload", func() {
 			By("Creating a new key")
 			client := mocks.New()
-			key, err := client.CreateKey(&kms.CreateKeyInput{})
+			key, err := client.CreateKey(context.TODO(), &kms.CreateKeyInput{})
 			Expect(err).To(BeNil())
-			Expect(aws.StringValue(key.KeyMetadata.KeyId)).NotTo(BeEmpty())
+			Expect(aws.ToString(key.KeyMetadata.KeyId)).NotTo(BeEmpty())
 
 			By("Getting the public key")
-			public, err := client.GetPublicKey(&kms.GetPublicKeyInput{
+			public, err := client.GetPublicKey(context.TODO(), &kms.GetPublicKeyInput{
 				KeyId: key.KeyMetadata.KeyId,
 			})
 			Expect(err).To(BeNil())
@@ -116,7 +118,7 @@ var _ = Context("KMSMock", func() {
 			By("Signging a payload")
 			message := []byte("message to be signed")
 			hashed := sha256.Sum256(message)
-			signed, err := client.Sign(&kms.SignInput{
+			signed, err := client.Sign(context.TODO(), &kms.SignInput{
 				KeyId:   key.KeyMetadata.KeyId,
 				Message: hashed[:],
 			})

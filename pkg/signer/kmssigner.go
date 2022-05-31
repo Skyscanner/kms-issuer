@@ -17,21 +17,21 @@ limitations under the License.
 package signer
 
 import (
+	"context"
 	"crypto"
 	"crypto/x509"
 	"io"
 
-	"github.com/aws/aws-sdk-go/aws"
-
-	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/aws/aws-sdk-go/service/kms/kmsiface"
+	"github.com/Skyscanner/kms-issuer/pkg/interfaces"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
+	kmstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 )
 
 // KMSSigner implements the crypto/Signer interface that can be used for signing operations
 // using an AWS KMS key. see https://golang.org/pkg/crypto/#Signer
 type KMSSigner struct {
 	// client is and instance of the aws kms client
-	client kmsiface.KMSAPI
+	client interfaces.KMSClient
 	// keyID is the KMS Key Id used for signing
 	keyID string
 	// public key
@@ -41,8 +41,8 @@ type KMSSigner struct {
 // New returns a KMSSigner instance given and AWS client and a KMS key used for signing.
 // TODO: explain what are the pre-requisits for the KMS key.
 // TODO: implement PublicKey caching with periodical refresh
-func New(client kmsiface.KMSAPI, keyID string) (*KMSSigner, error) {
-	response, err := client.GetPublicKey(&kms.GetPublicKeyInput{
+func New(ctx context.Context, client interfaces.KMSClient, keyID string) (*KMSSigner, error) {
+	response, err := client.GetPublicKey(ctx, &kms.GetPublicKeyInput{
 		KeyId: &keyID,
 	})
 	if err != nil {
@@ -68,11 +68,11 @@ func (s *KMSSigner) Public() crypto.PublicKey {
 // TODO: currently use SigningAlgorithmSpecRsassaPkcs1V15Sha256. Is that ok?
 // TODO: should use the opts provided.
 func (s *KMSSigner) Sign(rand io.Reader, digest []byte, opts crypto.SignerOpts) ([]byte, error) {
-	resp, err := s.client.Sign(&kms.SignInput{
+	resp, err := s.client.Sign(context.TODO(), &kms.SignInput{
 		KeyId:            &s.keyID,
 		Message:          digest,
-		MessageType:      aws.String(kms.MessageTypeDigest),
-		SigningAlgorithm: aws.String(kms.SigningAlgorithmSpecRsassaPkcs1V15Sha256),
+		MessageType:      kmstypes.MessageTypeDigest,
+		SigningAlgorithm: kmstypes.SigningAlgorithmSpecRsassaPkcs1V15Sha256,
 	})
 	if err != nil {
 		return nil, err

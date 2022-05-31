@@ -17,13 +17,14 @@ limitations under the License.
 package signer_test
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/x509"
 	"crypto/x509/pkix"
 
 	mocks "github.com/Skyscanner/kms-issuer/pkg/kmsmock"
 	"github.com/Skyscanner/kms-issuer/pkg/signer"
-	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
 
 	"math/big"
 	"time"
@@ -51,11 +52,11 @@ var _ = Context("Signer", func() {
 			}
 			By("creating a KMS key")
 			client := mocks.New()
-			key, err := client.CreateKey(&kms.CreateKeyInput{})
+			key, err := client.CreateKey(context.TODO(), &kms.CreateKeyInput{})
 			Expect(err).To(BeNil())
 
 			By("creating a new KMSSigner")
-			signer, err := signer.New(client, *key.KeyMetadata.KeyId)
+			signer, err := signer.New(context.TODO(), client, *key.KeyMetadata.KeyId)
 			Expect(signer).NotTo(BeNil())
 			Expect(err).To(BeNil())
 
@@ -83,7 +84,7 @@ var _ = Context("Signer", func() {
 		It("should fail", func() {
 			client := mocks.New()
 			By("erroring out")
-			signer, err := signer.New(client, "invalid key ID")
+			signer, err := signer.New(context.TODO(), client, "invalid key ID")
 			Expect(signer).To(BeNil())
 			Expect(err).NotTo(BeNil())
 		})

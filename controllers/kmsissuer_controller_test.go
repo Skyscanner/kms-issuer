@@ -46,7 +46,7 @@ var _ = Context("KMSIssuer", func() {
 	Describe("when a new resources is created", func() {
 		It("should sign the intermediate certificate", func() {
 			By("Creating a KMS Key")
-			keyID, err := ca.CreateKey(&kmsca.CreateKeyInput{
+			keyID, err := ca.CreateKey(context.TODO(), &kmsca.CreateKeyInput{
 				AliasName: "alias/test-key",
 			})
 			Expect(err).To(BeNil())
@@ -81,7 +81,7 @@ var _ = Context("KMSIssuer", func() {
 
 		It("should renew the certificate ", func() {
 			By("Creating a KMS Key")
-			keyID, err := ca.CreateKey(&kmsca.CreateKeyInput{
+			keyID, err := ca.CreateKey(context.TODO(), &kmsca.CreateKeyInput{
 				AliasName: "alias/test-key",
 			})
 			Expect(err).To(BeNil())

@@ -94,7 +94,7 @@ func (r *KMSIssuerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	if r.certificateNeedsRenewal(issuer, desiredCert) {
 		log.Info("generate certificate")
-		cert, err := r.KMSCA.GenerateAndSignCertificateAuthorityCertificate(certInput)
+		cert, err := r.KMSCA.GenerateAndSignCertificateAuthorityCertificate(ctx, certInput)
 		if err != nil {
 			return ctrl.Result{}, r.manageFailure(ctx, issuer, err, "Failed to generate the Certificate Authority Certificate")
 		}

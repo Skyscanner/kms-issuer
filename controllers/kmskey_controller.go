@@ -82,7 +82,7 @@ func (r *KMSKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		if !NeedToAddFinalizer(kmsKey) {
 			if kmsKey.Spec.DeletionPolicy == "Delete" {
 				log.Info("delete KMSKey")
-				err := r.KMSCA.DeleteKey(&kmsca.DeleteKeyInput{
+				err := r.KMSCA.DeleteKey(ctx, &kmsca.DeleteKeyInput{
 					AliasName:           kmsKey.Spec.AliasName,
 					PendingWindowInDays: kmsKey.Spec.DeletionPendingWindowInDays,
 				})
@@ -100,7 +100,7 @@ func (r *KMSKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	}
 
 	// Create the KMS key
-	keyID, err := r.KMSCA.CreateKey(&kmsca.CreateKeyInput{
+	keyID, err := r.KMSCA.CreateKey(ctx, &kmsca.CreateKeyInput{
 		AliasName:             kmsKey.Spec.AliasName,
 		Description:           kmsKey.Spec.Description,
 		CustomerMasterKeySpec: kmsKey.Spec.CustomerMasterKeySpec,

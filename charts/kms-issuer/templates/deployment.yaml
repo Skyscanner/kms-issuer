@@ -34,13 +34,15 @@ spec:
         protocol: TCP
     - command:
       - /manager
-      - --health-probe-bind-address={{ .Values.healthProbeBindAddress }}
-      - --metrics-bind-address={{ .Values.metricsBindAddress }}
+      - --health-probe-bind-address={{ .Values.args.healthProbeBindAddress }}
+      - --metrics-bind-address={{ .Values.args.metricsBindAddress }}
       {{- if or (gt ( .Values.replicaCount | int64) 1) .Values.args.enableLeaderElection }}
       - --enable-leader-election=true
       {{- end }}
-      - --enable-approved-check={{ .Values.enableApprovedCheck }}
-      - --local-aws-endpoint={{ .Values.localAwsEndpoit }}
+      {{- if .Values.args.enableApprovedCheck }}
+      - --enable-approved-check=true
+      {{-end }}
+      - --local-aws-endpoint={{ .Values.args.localAwsEndpoit }}
       image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
       imagePullPolicy: IfNotPresent
       livenessProbe:

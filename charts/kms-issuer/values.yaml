@@ -22,7 +22,7 @@ args:
   # -- The address the probe endpoint binds to
   healthProbeBindAddress: :8081
   # -- Enable waiting for CertificateRequests to have an approved condition before signing
-  enableApprovedCheck: "true"
+  enableApprovedCheck: true
   # -- The address of a local-kms endpoint for testing
   localAwsEndpoint: ""
 

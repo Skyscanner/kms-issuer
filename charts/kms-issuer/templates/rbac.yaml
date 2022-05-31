@@ -51,4 +51,4 @@ subjects:
 - kind: ServiceAccount
   name: {{ include "kms-issuer.serviceAccountName" . }}
   namespace: {{ .Release.Namespace }}
-{{-end }}
+{{- end }}

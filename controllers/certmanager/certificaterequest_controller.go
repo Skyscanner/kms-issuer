@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controllers
+package certmanager
 
 import (
 	"context"
@@ -22,7 +22,7 @@ import (
 
 	"encoding/pem"
 
-	kmsiapi "github.com/Skyscanner/kms-issuer/api/v1alpha1"
+	kmsiapi "github.com/Skyscanner/kms-issuer/apis/certmanager/v1alpha1"
 	kmsca "github.com/Skyscanner/kms-issuer/pkg/kmsca"
 	"github.com/go-logr/logr"
 	apiutil "github.com/jetstack/cert-manager/pkg/api/util"

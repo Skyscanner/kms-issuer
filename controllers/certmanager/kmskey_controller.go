@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controllers
+package certmanager
 
 import (
 	"context"
@@ -27,7 +27,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
-	kmsiapi "github.com/Skyscanner/kms-issuer/api/v1alpha1"
+	kmsiapi "github.com/Skyscanner/kms-issuer/apis/certmanager/v1alpha1"
 	kmsca "github.com/Skyscanner/kms-issuer/pkg/kmsca"
 )
 

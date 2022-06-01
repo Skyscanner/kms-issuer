@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controllers
+package certmanager
 
 import (
 	"context"
@@ -25,7 +25,7 @@ import (
 	"fmt"
 	"time"
 
-	kmsiapi "github.com/Skyscanner/kms-issuer/api/v1alpha1"
+	kmsiapi "github.com/Skyscanner/kms-issuer/apis/certmanager/v1alpha1"
 	"github.com/Skyscanner/kms-issuer/pkg/kmsca"
 	"github.com/go-logr/logr"
 	core "k8s.io/api/core/v1"

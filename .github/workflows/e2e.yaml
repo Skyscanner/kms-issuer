@@ -59,16 +59,18 @@ jobs:
         run: kubectl port-forward -n local-kms svc/local-kms 8080 &
         # See https://florian.ec/blog/github-actions-awscli-errors/
       - name: Test a KMSKey is created
+        id: get-key
         run: |
-          result=$(aws --endpoint http://localhost:8080 kms list-keys --region eu-west-1 --no-sign-request | jq '(.Keys | length) == 1')
-          if [[ "${result}" == true ]]; then
-            echo -n "Key created"
-          else
-            echo -n "Key not found"
+          result=$(aws --endpoint http://localhost:8080 kms list-keys --region eu-west-1 --no-sign-request |  jq -er '.Keys[0].KeyId')
+          if [[ "${result}" == "null" ]]; then
+            echo "Key not found"
             exit 1
+          else
+            echo "Key created"
           fi
+          echo "::set-output name=key_id::$result"
 
-      - name: Apply KMSISsuer from sample
+      - name: Apply KMSIssuer from sample
         run: kubectl apply -f ./config/samples/cert-manager_v1alpha1_kmsissuer.yaml
       - name: Wait for KMSIssuer to be ready
         run: kubectl wait --for=condition=Ready kmsissuer/kms-issuer-sample
@@ -78,6 +80,25 @@ jobs:
       - name: Wait for Certificate to be ready  
         run: kubectl wait --for=condition=Ready certificate.cert-manager.io/example-com
 
+      - name: Delete certificate
+        run: kubectl delete -f ./config/samples/certificate.yaml
+      - name: Delete KMSIssuer
+        run: kubectl delete -f ./config/samples/cert-manager_v1alpha1_kmsissuer.yaml
+      - name: Delete KMSKey
+        run: kubectl delete -f ./config/samples/cert-manager_v1alpha1_kmskey.yaml && sleep 2
+      - name: Check if key is schedule for deletion
+        run: |
+          result=$(aws --endpoint http://localhost:8080 kms describe-key --key-id ${{ steps.get-key.outputs.key_id }} --region eu-west-1 --no-sign-request |  jq -er '.KeyMetadata.KeyState')
+          if [[ "${result}" != "PendingDeletion" ]]; then
+            echo "Key is not in state PendingDeletion"
+            exit 1
+          else
+            echo "Key scheduled for deletion"
+          fi
+
       - name: Logs of controller
         if: always()
-        run: kubectl logs deployment/kms-issuer-controller-manager -n kms-issuer-system --all-containers
+        run: |
+          echo "::group::Controller logs"
+          kubectl logs deployment/kms-issuer-controller-manager -n kms-issuer-system --all-containers
+          echo "::endgroup::"

@@ -33,8 +33,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	certmanagerskyscannernetv1alpha1 "github.com/Skyscanner/kms-issuer/api/v1alpha1"
-	"github.com/Skyscanner/kms-issuer/controllers"
+	certmanagerskyscannernetv1alpha1 "github.com/Skyscanner/kms-issuer/apis/certmanager/v1alpha1"
+	"github.com/Skyscanner/kms-issuer/controllers/certmanager"
 	"github.com/Skyscanner/kms-issuer/pkg/kmsca"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -118,12 +118,12 @@ func main() {
 	setupLog.Info("Using region", "region", cfg.Region)
 	ca := kmsca.NewKMSCA(&cfg)
 
-	if err = (controllers.NewKMSIssuerReconciler(mgr, ca)).SetupWithManager(mgr); err != nil {
+	if err = (certmanager.NewKMSIssuerReconciler(mgr, ca)).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "KMSIssuer")
 		os.Exit(1)
 	}
 
-	if err = (&controllers.CertificateRequestReconciler{
+	if err = (&certmanager.CertificateRequestReconciler{
 		Client:   mgr.GetClient(),
 		Log:      ctrl.Log.WithName("controllers").WithName("CertificateRequest"),
 		Recorder: mgr.GetEventRecorderFor("certificaterequests-controller"),
@@ -136,7 +136,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (controllers.NewKMSKeyReconciler(mgr, ca)).SetupWithManager(mgr); err != nil {
+	if err = (certmanager.NewKMSKeyReconciler(mgr, ca)).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "KMSKey")
 		os.Exit(1)
 	}

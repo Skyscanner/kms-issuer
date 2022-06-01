@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controllers
+package certmanager
 
 import (
 	"context"
@@ -37,7 +37,7 @@ import (
 
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 
-	certmanagerv1alpha1 "github.com/Skyscanner/kms-issuer/api/v1alpha1"
+	certmanagerv1alpha1 "github.com/Skyscanner/kms-issuer/apis/certmanager/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -65,7 +65,7 @@ var _ = BeforeSuite(func() {
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
-		CRDDirectoryPaths:     []string{filepath.Join("..", "config", "crd", "bases")},
+		CRDDirectoryPaths:     []string{filepath.Join("..", "..", "config", "crd", "bases")},
 		ErrorIfCRDPathMissing: true,
 		UseExistingCluster:    &ok,
 	}

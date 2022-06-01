@@ -14,13 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controllers
+package certmanager
 
 import (
 	"context"
 	"time"
 
-	kmsiapi "github.com/Skyscanner/kms-issuer/api/v1alpha1"
+	kmsiapi "github.com/Skyscanner/kms-issuer/apis/certmanager/v1alpha1"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	kmstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"

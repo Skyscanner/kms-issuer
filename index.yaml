@@ -1,0 +1,20 @@
+apiVersion: v1
+entries:
+  kms-issuer:
+  - apiVersion: v2
+    appVersion: v2.0.0
+    created: "2022-06-09T08:39:26.059190722Z"
+    description: A Helm chart to install kms-issuer
+    digest: 18f50559544a231462ae2b1a13e32e6a332eff080bb238626c7bde07b0f37deb
+    keywords:
+    - cert-manager
+    - kubernetes
+    - kms
+    maintainers:
+    - name: maruina
+    name: kms-issuer
+    type: application
+    urls:
+    - https://Skyscanner.github.io/kms-issuer/kms-issuer-1.0.1.tgz
+    version: 1.0.1
+generated: "2022-06-09T08:39:26.057158199Z"

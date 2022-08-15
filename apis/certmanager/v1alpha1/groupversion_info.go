@@ -15,8 +15,8 @@ limitations under the License.
 */
 
 // Package v1alpha1 contains API Schema definitions for the cert-manager.skyscanner.net v1alpha1 API group
-//+kubebuilder:object:generate=true
-//+groupName=cert-manager.skyscanner.net
+// +kubebuilder:object:generate=true
+// +groupName=cert-manager.skyscanner.net
 package v1alpha1
 
 import (

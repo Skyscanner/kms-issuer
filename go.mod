@@ -9,8 +9,8 @@ require (
 	github.com/jetstack/cert-manager v1.7.2
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.20.0
-	k8s.io/api v0.24.3
-	k8s.io/apimachinery v0.24.3
+	k8s.io/api v0.24.4
+	k8s.io/apimachinery v0.24.4
 	k8s.io/client-go v0.24.3
 	k8s.io/kubectl v0.24.3
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9

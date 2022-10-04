@@ -15,7 +15,7 @@ jobs:
       IMG: skyscanner/kms-issuer:dev
       CERT_MANAGER_VERSION: v1.8.0
     steps:
-      - uses: actions/checkout@v3.0.2
+      - uses: actions/checkout@v3.1.0
 
       # Build testing docker image
       - name: Build the testing kms-issuer docker image

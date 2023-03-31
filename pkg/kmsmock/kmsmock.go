@@ -25,7 +25,7 @@ import (
 	"encoding/pem"
 	"strings"
 
-	"github.com/Skyscanner/kms-issuer/pkg/interfaces"
+	"github.com/Skyscanner/kms-issuer/v4/pkg/interfaces"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	kmstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"

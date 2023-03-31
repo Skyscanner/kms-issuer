@@ -32,12 +32,12 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	kmsca "github.com/Skyscanner/kms-issuer/pkg/kmsca"
-	mocks "github.com/Skyscanner/kms-issuer/pkg/kmsmock"
+	kmsca "github.com/Skyscanner/kms-issuer/v4/pkg/kmsca"
+	mocks "github.com/Skyscanner/kms-issuer/v4/pkg/kmsmock"
 
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 
-	certmanagerv1alpha1 "github.com/Skyscanner/kms-issuer/apis/certmanager/v1alpha1"
+	certmanagerv1alpha1 "github.com/Skyscanner/kms-issuer/v4/apis/certmanager/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
 

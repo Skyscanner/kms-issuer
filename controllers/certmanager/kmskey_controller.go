@@ -27,8 +27,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
-	kmsiapi "github.com/Skyscanner/kms-issuer/apis/certmanager/v1alpha1"
-	kmsca "github.com/Skyscanner/kms-issuer/pkg/kmsca"
+	kmsiapi "github.com/Skyscanner/kms-issuer/v4/apis/certmanager/v1alpha1"
+	kmsca "github.com/Skyscanner/kms-issuer/v4/pkg/kmsca"
 )
 
 // NewKMSKeyReconciler Initialise a new NewKMSKeyReconciler

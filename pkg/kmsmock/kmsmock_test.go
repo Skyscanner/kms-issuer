@@ -24,7 +24,7 @@ import (
 
 	"crypto/sha256"
 
-	mocks "github.com/Skyscanner/kms-issuer/pkg/kmsmock"
+	mocks "github.com/Skyscanner/kms-issuer/v4/pkg/kmsmock"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	kmstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"

@@ -20,9 +20,9 @@ import (
 	"context"
 	"time"
 
-	kmsiapi "github.com/Skyscanner/kms-issuer/apis/certmanager/v1alpha1"
+	kmsiapi "github.com/Skyscanner/kms-issuer/v4/apis/certmanager/v1alpha1"
 
-	"github.com/Skyscanner/kms-issuer/pkg/kmsca"
+	"github.com/Skyscanner/kms-issuer/v4/pkg/kmsca"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

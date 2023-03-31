@@ -23,12 +23,12 @@ import (
 	"testing"
 	"time"
 
-	kmsiapi "github.com/Skyscanner/kms-issuer/apis/certmanager/v1alpha1"
+	kmsiapi "github.com/Skyscanner/kms-issuer/v4/apis/certmanager/v1alpha1"
 	apiutil "github.com/jetstack/cert-manager/pkg/api/util"
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
 
-	"github.com/Skyscanner/kms-issuer/pkg/kmsca"
+	"github.com/Skyscanner/kms-issuer/v4/pkg/kmsca"
 	"github.com/jetstack/cert-manager/test/e2e/util"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

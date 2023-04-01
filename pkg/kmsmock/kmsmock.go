@@ -71,7 +71,7 @@ func New() *KMSMock {
 
 // CreateKey mocks of the KMS CreateKey method.
 // Returns a valid CreateKeyOutput response
-func (m *KMSMock) CreateKey(ctx context.Context, input *kms.CreateKeyInput, funcOpts ...func(*kms.Options)) (*kms.CreateKeyOutput, error) {
+func (m *KMSMock) CreateKey(_ context.Context, input *kms.CreateKeyInput, _ ...func(*kms.Options)) (*kms.CreateKeyOutput, error) {
 	uid := uuid.New().String()
 	m.keys[uid] = input
 	return &kms.CreateKeyOutput{
@@ -83,21 +83,21 @@ func (m *KMSMock) CreateKey(ctx context.Context, input *kms.CreateKeyInput, func
 
 // CreateAlias mocks of the KMS CreateAlias method.
 // Returns a valid CreateAliasOutput response
-func (m *KMSMock) CreateAlias(ctx context.Context, input *kms.CreateAliasInput, funcOpts ...func(*kms.Options)) (*kms.CreateAliasOutput, error) {
+func (m *KMSMock) CreateAlias(_ context.Context, input *kms.CreateAliasInput, _ ...func(*kms.Options)) (*kms.CreateAliasOutput, error) {
 	m.alias[aws.ToString(input.AliasName)] = aws.ToString(input.TargetKeyId)
 	return &kms.CreateAliasOutput{}, nil
 }
 
 // DeleteAlias mocks of the KMS DeleteAlias method.
 // Returns a valid DeleteAliasOutput response
-func (m *KMSMock) DeleteAlias(ctx context.Context, input *kms.DeleteAliasInput, funcOpts ...func(*kms.Options)) (*kms.DeleteAliasOutput, error) {
+func (m *KMSMock) DeleteAlias(_ context.Context, input *kms.DeleteAliasInput, _ ...func(*kms.Options)) (*kms.DeleteAliasOutput, error) {
 	delete(m.alias, aws.ToString(input.AliasName))
 	return &kms.DeleteAliasOutput{}, nil
 }
 
 // DescribeKey mocks of the KMS DescribeKey method.
 // Returns a valid DescribeKeyOutput response
-func (m *KMSMock) DescribeKey(ctx context.Context, input *kms.DescribeKeyInput, funcOpts ...func(*kms.Options)) (*kms.DescribeKeyOutput, error) {
+func (m *KMSMock) DescribeKey(_ context.Context, input *kms.DescribeKeyInput, _ ...func(*kms.Options)) (*kms.DescribeKeyOutput, error) {
 	keyID := aws.ToString(input.KeyId)
 	// fetch key id from alias
 	if strings.HasPrefix(keyID, "alias/") {
@@ -114,7 +114,7 @@ func (m *KMSMock) DescribeKey(ctx context.Context, input *kms.DescribeKeyInput, 
 }
 
 // ListResourceTags mocks of the KMS ListResourceTags method.
-func (m *KMSMock) ListResourceTags(ctx context.Context, input *kms.ListResourceTagsInput, funcOpts ...func(*kms.Options)) (*kms.ListResourceTagsOutput, error) {
+func (m *KMSMock) ListResourceTags(_ context.Context, input *kms.ListResourceTagsInput, _ ...func(*kms.Options)) (*kms.ListResourceTagsOutput, error) {
 	if key, ok := m.keys[aws.ToString(input.KeyId)]; ok {
 		return &kms.ListResourceTagsOutput{
 			Tags: key.Tags,
@@ -124,7 +124,7 @@ func (m *KMSMock) ListResourceTags(ctx context.Context, input *kms.ListResourceT
 }
 
 // ScheduleKeyDeletion mocks of the KMS ScheduleKeyDeletion method.
-func (m *KMSMock) ScheduleKeyDeletion(ctx context.Context, input *kms.ScheduleKeyDeletionInput, funcOpts ...func(*kms.Options)) (*kms.ScheduleKeyDeletionOutput, error) {
+func (m *KMSMock) ScheduleKeyDeletion(_ context.Context, input *kms.ScheduleKeyDeletionInput, _ ...func(*kms.Options)) (*kms.ScheduleKeyDeletionOutput, error) {
 	if _, ok := m.keys[aws.ToString(input.KeyId)]; ok {
 		return &kms.ScheduleKeyDeletionOutput{}, nil
 	}
@@ -132,7 +132,7 @@ func (m *KMSMock) ScheduleKeyDeletion(ctx context.Context, input *kms.ScheduleKe
 }
 
 // GetPublicKey mocks of the KMS GetPublicKey method.
-func (m *KMSMock) GetPublicKey(ctx context.Context, input *kms.GetPublicKeyInput, funcOpts ...func(*kms.Options)) (*kms.GetPublicKeyOutput, error) {
+func (m *KMSMock) GetPublicKey(_ context.Context, input *kms.GetPublicKeyInput, _ ...func(*kms.Options)) (*kms.GetPublicKeyOutput, error) {
 	if key, ok := m.keys[aws.ToString(input.KeyId)]; ok {
 		block, _ := pem.Decode(publicKey)
 		return &kms.GetPublicKeyOutput{
@@ -146,7 +146,7 @@ func (m *KMSMock) GetPublicKey(ctx context.Context, input *kms.GetPublicKeyInput
 }
 
 // Sign mocks of the KMS Sign method.
-func (m *KMSMock) Sign(ctx context.Context, input *kms.SignInput, funcOpts ...func(*kms.Options)) (*kms.SignOutput, error) {
+func (m *KMSMock) Sign(_ context.Context, input *kms.SignInput, _ ...func(*kms.Options)) (*kms.SignOutput, error) {
 	if _, ok := m.keys[aws.ToString(input.KeyId)]; ok {
 		block, _ := pem.Decode(privateKey)
 		signer, _ := x509.ParsePKCS1PrivateKey(block.Bytes)

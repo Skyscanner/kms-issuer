@@ -29,8 +29,8 @@ import (
 	"crypto/sha1" //nolint:gosec // Used for consistent hash
 	"math/big"
 
-	"github.com/Skyscanner/kms-issuer/pkg/interfaces"
-	"github.com/Skyscanner/kms-issuer/pkg/signer"
+	"github.com/Skyscanner/kms-issuer/v4/pkg/interfaces"
+	"github.com/Skyscanner/kms-issuer/v4/pkg/signer"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	kmstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"

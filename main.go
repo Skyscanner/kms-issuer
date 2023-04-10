@@ -33,9 +33,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	certmanagerskyscannernetv1alpha1 "github.com/Skyscanner/kms-issuer/apis/certmanager/v1alpha1"
-	"github.com/Skyscanner/kms-issuer/controllers/certmanager"
-	"github.com/Skyscanner/kms-issuer/pkg/kmsca"
+	certmanagerskyscannernetv1alpha1 "github.com/Skyscanner/kms-issuer/v4/apis/certmanager/v1alpha1"
+	"github.com/Skyscanner/kms-issuer/v4/controllers/certmanager"
+	"github.com/Skyscanner/kms-issuer/v4/pkg/kmsca"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"

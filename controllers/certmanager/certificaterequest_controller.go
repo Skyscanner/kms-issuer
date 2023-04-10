@@ -22,8 +22,8 @@ import (
 
 	"encoding/pem"
 
-	kmsiapi "github.com/Skyscanner/kms-issuer/apis/certmanager/v1alpha1"
-	kmsca "github.com/Skyscanner/kms-issuer/pkg/kmsca"
+	kmsiapi "github.com/Skyscanner/kms-issuer/v4/apis/certmanager/v1alpha1"
+	kmsca "github.com/Skyscanner/kms-issuer/v4/pkg/kmsca"
 	"github.com/go-logr/logr"
 	apiutil "github.com/jetstack/cert-manager/pkg/api/util"
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"

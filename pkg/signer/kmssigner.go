@@ -67,7 +67,7 @@ func (s *KMSSigner) Public() crypto.PublicKey {
 // Sign signs digest with the KMS key.
 // TODO: currently use SigningAlgorithmSpecRsassaPkcs1V15Sha256. Is that ok?
 // TODO: should use the opts provided.
-func (s *KMSSigner) Sign(rand io.Reader, digest []byte, opts crypto.SignerOpts) ([]byte, error) {
+func (s *KMSSigner) Sign(_ io.Reader, digest []byte, _ crypto.SignerOpts) ([]byte, error) {
 	resp, err := s.client.Sign(context.TODO(), &kms.SignInput{
 		KeyId:            &s.keyID,
 		Message:          digest,

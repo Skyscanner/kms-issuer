@@ -68,9 +68,9 @@ spec:
         resources:
           {{- toYaml .Values.resources | nindent 12 }}
         securityContext:
-          allowPrivilegeEscalation: false
+            {{- toYaml .Values.containerSecurityContext | nindent 12 }}
       securityContext:
-        runAsNonRoot: true
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
       serviceAccountName: {{ include "kms-issuer.serviceAccountName" . }}
       terminationGracePeriodSeconds: 10
       {{- with .Values.nodeSelector }}

@@ -1,6 +1,6 @@
 module github.com/Skyscanner/kms-issuer/v4
 
-go 1.17
+go 1.21
 
 require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.15

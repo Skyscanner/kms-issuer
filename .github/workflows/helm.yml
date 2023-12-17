@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       IMG: skyscanner/kms-issuer:dev
-      CERT_MANAGER_VERSION: v1.8.0
+      CERT_MANAGER_VERSION: v1.13.2
 
     steps:
       - name: Checkout
@@ -23,7 +23,7 @@ jobs:
 
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.17
+          go-version: ^1.21
 
       - name: Set up Helm
         uses: azure/setup-helm@v3.5

@@ -25,3 +25,6 @@ testbin/*
 *~
 .vscode
 ct_previous*
+
+.devenv
+.direnv

@@ -22,10 +22,8 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"errors"
-	"fmt"
 	"time"
 
-	kmsiapi "github.com/Skyscanner/kms-issuer/v4/apis/certmanager/v1alpha1"
 	"github.com/Skyscanner/kms-issuer/v4/pkg/kmsca"
 	"github.com/go-logr/logr"
 	core "k8s.io/api/core/v1"
@@ -35,6 +33,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+
+	kmsiapi "github.com/Skyscanner/kms-issuer/v4/apis/certmanager/v1alpha1"
 )
 
 const (
@@ -81,20 +81,29 @@ func (r *KMSIssuerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	// validation
-	if issuer.Spec.KeyID == "" {
-		return ctrl.Result{}, r.manageFailure(ctx, issuer, errors.New("INVALID KeyId"), fmt.Sprintf("Not a valid key: %s", issuer.Spec.KeyID))
-	}
 	// set default values
 	r.setIssuerDefaultValues(issuer)
 
-	// Renew the certificate
-	certInput := desiredCertificateAuthorityCertificateInput(issuer)
-	desiredCert := r.KMSCA.GenerateCertificateAuthorityCertificate(certInput)
+	// Get the Key URI from the key referenced by KeyRef
+	keyUri, err := getKeyFromRef(ctx, r.Client, issuer.Namespace, issuer.Spec.KeyRef)
+	if err != nil {
+		return ctrl.Result{}, r.manageFailure(ctx, issuer, err, "Error getting key from KeyRef")
+	}
 
+	// Calculate a desired certificate
+	certInput := desiredCertificateAuthorityCertificateInput(issuer, keyUri)
+	desiredCert, err := r.KMSCA.GenerateCertificateAuthorityCertificate(ctx, certInput)
+	if err != nil {
+		return ctrl.Result{}, r.manageFailure(ctx, issuer, err, "Failed to compare with existing certificate")
+	}
+
+	// Sign the cert if it or the signing key have changed
 	if r.certificateNeedsRenewal(issuer, desiredCert) {
-		log.Info("generate certificate")
-		cert, err := r.KMSCA.GenerateAndSignCertificateAuthorityCertificate(ctx, certInput)
+		log.Info("siging CA certificate")
+		cert, err := r.KMSCA.SelfSignCertificate(ctx, &kmsca.SelfSignCertificateInput{
+			Cert:   desiredCert,
+			KeyUri: keyUri,
+		})
 		if err != nil {
 			return ctrl.Result{}, r.manageFailure(ctx, issuer, err, "Failed to generate the Certificate Authority Certificate")
 		}
@@ -175,7 +184,7 @@ func (r *KMSIssuerReconciler) certificateNeedsRenewal(issuer *kmsiapi.KMSIssuer,
 		return true
 	}
 
-	// Check if the certificate has changed
+	// Check if the certificate or key has changed
 	if desiredCert.SerialNumber.Cmp(actualCert.SerialNumber) != 0 {
 		log.Info("certificate serial number missmatch", "desired", desiredCert.SerialNumber, "actual", actualCert.SerialNumber)
 		return true
@@ -184,14 +193,14 @@ func (r *KMSIssuerReconciler) certificateNeedsRenewal(issuer *kmsiapi.KMSIssuer,
 }
 
 // desiredCertificateAuthorityCertificateInput returns the desired cert input
-func desiredCertificateAuthorityCertificateInput(issuer *kmsiapi.KMSIssuer) *kmsca.GenerateCertificateAuthorityCertificateInput {
+func desiredCertificateAuthorityCertificateInput(issuer *kmsiapi.KMSIssuer, keyUri string) *kmsca.GenerateCertificateAuthorityCertificateInput {
 	return &kmsca.GenerateCertificateAuthorityCertificateInput{
-		KeyID: issuer.Spec.KeyID,
 		Subject: pkix.Name{
 			CommonName: issuer.Spec.CommonName,
 		},
 		Duration: issuer.Spec.Duration.Duration,
 		Rounding: issuer.Spec.Duration.Duration - issuer.Spec.RenewBefore.Duration,
+		KeyUri:   keyUri,
 	}
 }
 

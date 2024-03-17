@@ -18,19 +18,17 @@ package certmanager
 
 import (
 	"context"
-	"crypto/x509"
-	"net"
 	"testing"
 	"time"
 
 	kmsiapi "github.com/Skyscanner/kms-issuer/v4/apis/certmanager/v1alpha1"
-	apiutil "github.com/jetstack/cert-manager/pkg/api/util"
-	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
-	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
+	apiutil "github.com/cert-manager/cert-manager/pkg/api/util"
+	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
+	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 
-	"github.com/Skyscanner/kms-issuer/v4/pkg/kmsca"
-	"github.com/jetstack/cert-manager/test/e2e/util"
-	. "github.com/onsi/ginkgo"
+	kcck8s "github.com/GoogleCloudPlatform/k8s-config-connector/pkg/clients/generated/apis/k8s/v1alpha1"
+	"github.com/cert-manager/cert-manager/test/unit/gen"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -47,10 +45,7 @@ var _ = Context("CertificateRequestReconciler", func() {
 	Describe("when a new CertificateRequest is created", func() {
 		It("should sign the certificate request", func() {
 			By("Creating a KMSIssuer")
-			keyID, err := ca.CreateKey(context.TODO(), &kmsca.CreateKeyInput{
-				AliasName: "alias/test-key",
-			})
-			Expect(err).To(BeNil())
+			keyUri := "abcd12345"
 			issuerKey := client.ObjectKey{
 				Name:      "test-kms-issuer",
 				Namespace: "default",
@@ -61,7 +56,9 @@ var _ = Context("CertificateRequestReconciler", func() {
 					Namespace: issuerKey.Namespace,
 				},
 				Spec: kmsiapi.KMSIssuerSpec{
-					KeyID:      keyID,
+					KeyRef: kcck8s.ResourceRef{
+						External: keyUri,
+					},
 					CommonName: "RootCA",
 					Duration:   &metav1.Duration{},
 				},
@@ -81,22 +78,27 @@ var _ = Context("CertificateRequestReconciler", func() {
 				Name:      "test-kms-issuer",
 				Namespace: "default",
 			}
-			exampleDNSNames := []string{"dnsName1.co", "dnsName2.ninja"}
-			exampleIPAddresses := []net.IP{
-				[]byte{8, 8, 8, 8},
-				[]byte{1, 1, 1, 1},
-			}
-			exampleURIs := []string{"spiffe://foo.foo.example.net", "spiffe://foo.bar.example.net"}
-			cr, _, err := util.NewCertManagerBasicCertificateRequest( //nolint:staticcheck // TODO: fixed when refactored
-				crKey.Name, issuerKey.Name, "KMSIssuer",
-				&metav1.Duration{
-					Duration: time.Hour * 24 * 90,
-				},
-				exampleDNSNames, exampleIPAddresses, exampleURIs, x509.RSA,
+			//exampleDNSNames := []string{"dnsName1.co", "dnsName2.ninja"}
+			//exampleIPAddresses := []string{
+			//	"8.8.8.8",
+			//	"1.1.1.1",
+			//}
+			//exampleURIs := []string{"spiffe://foo.foo.example.net", "spiffe://foo.bar.example.net"}
+			cr := gen.CertificateRequest(crKey.Name,
+				gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{
+					Name:  issuer.Name,
+					Kind:  "KMSIssuer",
+					Group: kmsiapi.GroupVersion.Group,
+				}),
+				gen.SetCertificateRequestNamespace(crKey.Namespace),
 			)
-			cr.ObjectMeta.Namespace = crKey.Namespace
-			cr.Spec.IssuerRef.Group = kmsiapi.GroupVersion.Group
-			Expect(err).To(BeNil())
+			//cr, _, err := util.NewCertManagerBasicCertificateRequest( //nolint:staticcheck // TODO: fixed when refactored
+			//	crKey.Name, issuerKey.Name, "KMSIssuer",
+			//	&metav1.Duration{
+			//		Duration: time.Hour * 24 * 90,
+			//	},
+			//	exampleDNSNames, exampleIPAddresses, exampleURIs, x509.RSA,
+			//)
 			Expect(k8sClient.Create(context.Background(), cr)).Should(Succeed(), "failed to create test CertificateRequest resource")
 
 			By("Approving request so it may be signed")

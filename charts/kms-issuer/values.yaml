@@ -28,6 +28,8 @@ args:
   enableApprovedCheck: true
   # -- The address of a local-kms endpoint for testing
   localAwsEndpoint: ""
+  # -- Use GCP KMS instead of AWS
+  useGcpKms: false
 
 env:
   # -- The AWS region the controller is deployed to

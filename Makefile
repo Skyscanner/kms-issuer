@@ -11,6 +11,9 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
+GOSRC = ./controllers/... ./pkg/... ./apis/...
+CODEDIRS={./controllers/...,./pkg/...,./apis/...}
+
 # Setting SHELL to bash allows bash commands to be executed by recipes.
 # This is a requirement for 'setup-envtest.sh' in the test target.
 # Options are set to exit when a recipe line exits non-zero or a piped command fails.
@@ -41,24 +44,25 @@ help: ## Display this help.
 
 .PHONY: manifests
 manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
-	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
-	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=charts/kms-issuer/crds
+	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="$(CODEDIRS)" output:crd:artifacts:config=config/crd/bases
+	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="$(CODEDIRS)" output:crd:artifacts:config=charts/kms-issuer/crds
 
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
-	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
+	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="$(CODEDIRS)"
 
+GO_PKGS=$(shell go list $(CODEDIRS))
 .PHONY: fmt
 fmt: ## Run go fmt against code.
-	go fmt ./...
+	go fmt $(GO_PKGS)
 
 .PHONY: vet
 vet: ## Run go vet against code.
-	go vet ./...
+	go vet $(GO_PKGS)
 
 .PHONY: test
 test: manifests generate fmt vet envtest ## Run tests.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out -test.v
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test $(GOSRC) -coverprofile cover.out -test.v
 
 ##@ Build
 
@@ -115,7 +119,7 @@ ENVTEST ?= $(LOCALBIN)/setup-envtest
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v3.8.7
-CONTROLLER_TOOLS_VERSION ?= v0.8.0
+CONTROLLER_TOOLS_VERSION ?= v0.11.4
 
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
 .PHONY: kustomize

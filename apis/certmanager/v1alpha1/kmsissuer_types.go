@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	kcck8s "github.com/GoogleCloudPlatform/k8s-config-connector/pkg/clients/generated/apis/k8s/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -33,11 +34,9 @@ const (
 // KMSIssuerSpec defines the desired state of KMSIssuer
 type KMSIssuerSpec struct {
 
-	// KeyID is the unique identifier for the customer master key (CMK)
-	// deletion. When unspecified, a RSA 2048 key is created and managed by
-	// the operator.
-	// +optional
-	KeyID string `json:"keyId,omitempty"`
+	// The KMSCryptoKey backing this issuer
+	// Currently supports an external URI or a reference to a KCC KMSCryptoKey instance
+	KeyRef kcck8s.ResourceRef `json:"keyRef"`
 
 	// CommonName is a common name to be used on the Certificate.
 	// The CommonName should have a length of 64 characters or fewer to avoid

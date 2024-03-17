@@ -17,7 +17,6 @@ limitations under the License.
 package main
 
 import (
-	"context"
 	"flag"
 	"os"
 
@@ -36,10 +35,7 @@ import (
 	certmanagerskyscannernetv1alpha1 "github.com/Skyscanner/kms-issuer/v4/apis/certmanager/v1alpha1"
 	"github.com/Skyscanner/kms-issuer/v4/controllers/certmanager"
 	"github.com/Skyscanner/kms-issuer/v4/pkg/kmsca"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials"
-	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
+	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -59,7 +55,6 @@ func main() {
 	var metricsAddr string
 	var enableLeaderElection, enableApprovedCheck bool
 	var probeAddr string
-	var localAWSEndpoint string
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
@@ -67,7 +62,6 @@ func main() {
 			"Enabling this will ensure there is only one active controller manager.")
 	flag.BoolVar(&enableApprovedCheck, "enable-approved-check", true,
 		"Enable waiting for CertificateRequests to have an approved condition before signing.")
-	flag.StringVar(&localAWSEndpoint, "local-aws-endpoint", "", "local-kms endpoint for testing")
 	opts := zap.Options{Development: true}
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
@@ -78,45 +72,16 @@ func main() {
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
-		MetricsBindAddress:     metricsAddr,
-		Port:                   webhookPort,
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
-		LeaderElectionID:       "dcb53387.skyscanner.net",
+		LeaderElectionID:       "dcb53387.drzzl.io",
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
 	}
 
-	// If using a local endpoint we create a custom endpoint resolver, hard code
-	// the region and test credentials.
-	// Otherwise we leave the config loading to the default aws order (env vars,
-	// EC2 IMDS, etc.)
-	awsLoadConfigOpts := []func(*config.LoadOptions) error{}
-	if localAWSEndpoint != "" {
-		setupLog.Info("Using custom AWS Endpoint", "endpoint", localAWSEndpoint)
-		awsEndpointsResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-			return aws.Endpoint{PartitionID: "aws", URL: localAWSEndpoint, SigningRegion: "eu-west-1"}, nil
-		})
-		awsLoadConfigOpts = append(
-			awsLoadConfigOpts,
-			config.WithEndpointResolverWithOptions(awsEndpointsResolver),
-			config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider("test", "test", "test")),
-			config.WithRegion("eu-west-1"),
-		)
-	} else {
-		setupLog.Info("Using default AWS endpoint")
-	}
-
-	// Load the config with the given options and create a new KMSCA
-	cfg, err := config.LoadDefaultConfig(context.Background(), awsLoadConfigOpts...)
-	if err != nil {
-		setupLog.Error(err, "Error loading default aws config")
-		os.Exit(1)
-	}
-	setupLog.Info("Using region", "region", cfg.Region)
-	ca := kmsca.NewKMSCA(&cfg)
+	ca := kmsca.NewKMSCA()
 
 	if err = (certmanager.NewKMSIssuerReconciler(mgr, ca)).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "KMSIssuer")
@@ -133,11 +98,6 @@ func main() {
 		CheckApprovedCondition: enableApprovedCheck,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "CertificateRequest")
-		os.Exit(1)
-	}
-
-	if err = (certmanager.NewKMSKeyReconciler(mgr, ca)).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "KMSKey")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder

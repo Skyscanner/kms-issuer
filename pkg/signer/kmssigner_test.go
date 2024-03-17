@@ -17,19 +17,14 @@ limitations under the License.
 package signer_test
 
 import (
-	"context"
 	"crypto/rand"
 	"crypto/x509"
 	"crypto/x509/pkix"
 
-	mocks "github.com/Skyscanner/kms-issuer/v4/pkg/kmsmock"
-	"github.com/Skyscanner/kms-issuer/v4/pkg/signer"
-	"github.com/aws/aws-sdk-go-v2/service/kms"
-
 	"math/big"
 	"time"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
@@ -49,16 +44,9 @@ var _ = Context("Signer", func() {
 				ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
 				KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
 				BasicConstraintsValid: true,
+				SignatureAlgorithm:    x509.SHA256WithRSAPSS,
 			}
-			By("creating a KMS key")
-			client := mocks.New()
-			key, err := client.CreateKey(context.TODO(), &kms.CreateKeyInput{})
-			Expect(err).To(BeNil())
-
-			By("creating a new KMSSigner")
-			signer, err := signer.New(context.TODO(), client, *key.KeyMetadata.KeyId)
-			Expect(signer).NotTo(BeNil())
-			Expect(err).To(BeNil())
+			signer := newMockSigner("abcd12345")
 
 			By("extracting the public key")
 			pub := signer.Public()
@@ -77,16 +65,6 @@ var _ = Context("Signer", func() {
 				Roots: roots,
 			})
 			Expect(err).To(BeNil())
-		})
-	})
-
-	Describe("Given an invalid KMS key ID", func() {
-		It("should fail", func() {
-			client := mocks.New()
-			By("erroring out")
-			signer, err := signer.New(context.TODO(), client, "invalid key ID")
-			Expect(signer).To(BeNil())
-			Expect(err).NotTo(BeNil())
 		})
 	})
 })

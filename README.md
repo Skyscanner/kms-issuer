@@ -5,7 +5,7 @@
 [![E2E Tests](https://github.com/Skyscanner/kms-issuer/actions/workflows/e2e.yaml/badge.svg?branch=main)](https://github.com/Skyscanner/kms-issuer/actions)
 [![Helm Chart Tests](https://github.com/Skyscanner/kms-issuer/actions/workflows/helm.yml/badge.svg?branch=main)](https://github.com/Skyscanner/kms-issuer/actions)
 
-KMS issuer is a [cert-manager](https://cert-manager.io/) Certificate Request controller that uses [AWS KMS](https://aws.amazon.com/kms/) to sign the certificate request.
+KMS issuer is a [cert-manager](https://cert-manager.io/) Certificate Request controller that uses [AWS KMS](https://aws.amazon.com/kms/) or [GCP KMS]( https://cloud.google.com/security/products/security-key-management) to sign the certificate request.
 
 ## Getting started
 

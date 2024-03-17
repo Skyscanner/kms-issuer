@@ -24,11 +24,11 @@ import (
 
 	kmsiapi "github.com/Skyscanner/kms-issuer/v4/apis/certmanager/v1alpha1"
 	kmsca "github.com/Skyscanner/kms-issuer/v4/pkg/kmsca"
+	apiutil "github.com/cert-manager/cert-manager/pkg/api/util"
+	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
+	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
+	pkiutil "github.com/cert-manager/cert-manager/pkg/util/pki"
 	"github.com/go-logr/logr"
-	apiutil "github.com/jetstack/cert-manager/pkg/api/util"
-	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
-	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
-	pkiutil "github.com/jetstack/cert-manager/pkg/util/pki"
 	core "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -135,10 +135,16 @@ func (r *CertificateRequestReconciler) Reconcile(ctx context.Context, req ctrl.R
 		return ctrl.Result{}, r.setStatus(ctx, cr, cmmeta.ConditionFalse, cmapi.CertificateRequestReasonFailed, "Failed to decode issuer public certificate: %v", err)
 	}
 
+	// Get the Key URI from the key referenced by KeyRef
+	keyUri, err := getKeyFromRef(ctx, r.Client, issuer.Namespace, issuer.Spec.KeyRef)
+	if err != nil {
+		return ctrl.Result{}, r.setStatus(ctx, cr, cmmeta.ConditionFalse, cmapi.CertificateRequestReasonFailed, "Error getting key from KeyRef: %v", err)
+	}
+
 	signed, err := r.KMSCA.SignCertificate(
 		ctx,
 		&kmsca.IssueCertificateInput{
-			KeyID:     issuer.Spec.KeyID,
+			KeyUri:    keyUri,
 			Parent:    parent,
 			Cert:      cert,
 			PublicKey: cert.PublicKey,

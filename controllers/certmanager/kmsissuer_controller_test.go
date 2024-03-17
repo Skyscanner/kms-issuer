@@ -20,10 +20,10 @@ import (
 	"context"
 	"time"
 
+	kcck8s "github.com/GoogleCloudPlatform/k8s-config-connector/pkg/clients/generated/apis/k8s/v1alpha1"
 	kmsiapi "github.com/Skyscanner/kms-issuer/v4/apis/certmanager/v1alpha1"
 
-	"github.com/Skyscanner/kms-issuer/v4/pkg/kmsca"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -45,12 +45,6 @@ var _ = Context("KMSIssuer", func() {
 
 	Describe("when a new resources is created", func() {
 		It("should sign the intermediate certificate", func() {
-			By("Creating a KMS Key")
-			keyID, err := ca.CreateKey(context.TODO(), &kmsca.CreateKeyInput{
-				AliasName: "alias/test-key",
-			})
-			Expect(err).To(BeNil())
-
 			By("Creating a KMSIssuer object with an empty KeyId")
 			key := client.ObjectKey{
 				Name:      "key",
@@ -62,7 +56,9 @@ var _ = Context("KMSIssuer", func() {
 					Namespace: key.Namespace,
 				},
 				Spec: kmsiapi.KMSIssuerSpec{
-					KeyID:      keyID,
+					KeyRef: kcck8s.ResourceRef{
+						External: "abcd12345",
+					},
 					CommonName: "RootCA",
 				},
 			}
@@ -80,12 +76,6 @@ var _ = Context("KMSIssuer", func() {
 		})
 
 		It("should renew the certificate ", func() {
-			By("Creating a KMS Key")
-			keyID, err := ca.CreateKey(context.TODO(), &kmsca.CreateKeyInput{
-				AliasName: "alias/test-key",
-			})
-			Expect(err).To(BeNil())
-
 			By("Creating a KMSIssuer object with an empty KeyId")
 			key := client.ObjectKey{
 				Name:      "key-to-renew",
@@ -97,7 +87,9 @@ var _ = Context("KMSIssuer", func() {
 					Namespace: key.Namespace,
 				},
 				Spec: kmsiapi.KMSIssuerSpec{
-					KeyID:      keyID,
+					KeyRef: kcck8s.ResourceRef{
+						External: "abcd12345",
+					},
 					CommonName: "RootCA",
 					Duration: &metav1.Duration{
 						Duration: time.Second,

@@ -3,8 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.8.0
-  creationTimestamp: null
+    controller-gen.kubebuilder.io/version: v0.11.4
   name: kmsissuers.cert-manager.skyscanner.net
 spec:
   group: cert-manager.skyscanner.net
@@ -44,11 +43,23 @@ spec:
               duration:
                 description: Certificate default Duration
                 type: string
-              keyId:
-                description: KeyID is the unique identifier for the customer master
-                  key (CMK) deletion. When unspecified, a RSA 2048 key is created
-                  and managed by the operator.
-                type: string
+              keyRef:
+                description: The KMSCryptoKey backing this issuer Currently supports
+                  an external URI or a reference to a KCC KMSCryptoKey instance
+                properties:
+                  external:
+                    description: The external name of the referenced resource
+                    type: string
+                  kind:
+                    description: Kind of the referent.
+                    type: string
+                  name:
+                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                    type: string
+                  namespace:
+                    description: 'Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/'
+                    type: string
+                type: object
               renewBefore:
                 description: RenewBefore is the amount of time before the currently
                   issued certificate’s notAfter time that the issuer will begin to
@@ -57,6 +68,8 @@ spec:
                   it will be automatically renewed 2/3rds of the way through the certificate’s
                   duration.
                 type: string
+            required:
+            - keyRef
             type: object
           status:
             description: KMSIssuerStatus defines the observed state of KMSIssuer
@@ -112,9 +125,3 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []

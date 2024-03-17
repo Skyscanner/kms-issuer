@@ -22,7 +22,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/utils/clock"
@@ -33,9 +33,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	kmsca "github.com/Skyscanner/kms-issuer/v4/pkg/kmsca"
-	mocks "github.com/Skyscanner/kms-issuer/v4/pkg/kmsmock"
 
-	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
+	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 
 	certmanagerv1alpha1 "github.com/Skyscanner/kms-issuer/v4/apis/certmanager/v1alpha1"
 	// +kubebuilder:scaffold:imports
@@ -91,8 +90,6 @@ var _ = BeforeSuite(func() {
 	Expect(k8sManager).NotTo(BeNil())
 	Expect(err).NotTo(HaveOccurred())
 
-	ca.Client = mocks.New()
-
 	err = (&CertificateRequestReconciler{
 		Client:                 k8sManager.GetClient(),
 		Log:                    logf.Log,
@@ -106,16 +103,13 @@ var _ = BeforeSuite(func() {
 	err = NewKMSIssuerReconciler(k8sManager, &ca).SetupWithManager(k8sManager)
 	Expect(err).NotTo(HaveOccurred(), "failed to setup the KMSIssuerReconciler controller")
 
-	err = NewKMSKeyReconciler(k8sManager, &ca).SetupWithManager(k8sManager)
-	Expect(err).NotTo(HaveOccurred(), "failed to setup the KMSKeyReconciler controller")
-
 	go func() {
 		defer GinkgoRecover()
 		err = k8sManager.Start(ctx)
 		Expect(err).ToNot(HaveOccurred(), "failed to run manager")
 	}()
 
-}, 60)
+})
 
 var _ = AfterSuite(func() {
 	cancel()

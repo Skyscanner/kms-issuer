@@ -115,7 +115,7 @@ func (r *KMSIssuerReconciler) setIssuerDefaultValues(issuer *kmsiapi.KMSIssuer) 
 		log.Info("setting default duration", "duration", defaultCertDuration)
 		issuer.Spec.Duration = &metav1.Duration{Duration: defaultCertDuration}
 	}
-	renewBefore := time.Duration(float64(issuer.Spec.Duration.Duration.Nanoseconds()) * defaultCertRenewalRatio)
+	renewBefore := time.Duration(float64(issuer.Spec.Duration.Duration.Nanoseconds()) * defaultCertRenewalRatio) //nolint:staticcheck // QF1008: Duration is a named field on metav1.Duration, not an embedded type
 	if issuer.Spec.RenewBefore == nil {
 		log.Info("setting default", "RenewBefore", renewBefore)
 		issuer.Spec.RenewBefore = &metav1.Duration{
@@ -134,14 +134,14 @@ func (r *KMSIssuerReconciler) setIssuerDefaultValues(issuer *kmsiapi.KMSIssuer) 
 func (r *KMSIssuerReconciler) patchIssuerStatus(ctx context.Context, issuer *kmsiapi.KMSIssuer) error {
 	var latest kmsiapi.KMSIssuer
 
-	if err := r.Client.Get(ctx, client.ObjectKeyFromObject(issuer), &latest); err != nil {
+	if err := r.Get(ctx, client.ObjectKeyFromObject(issuer), &latest); err != nil {
 		return err
 	}
 
 	patch := client.MergeFrom(latest.DeepCopy())
 	latest.Status = issuer.Status
 
-	return r.Client.Status().Patch(ctx, &latest, patch)
+	return r.Status().Patch(ctx, &latest, patch)
 }
 
 // ParseCertificate parse the x509 certificate.

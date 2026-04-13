@@ -62,7 +62,7 @@ func (r *KMSKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 
 	// retrieve the KMSKey resource to reconcile.
 	kmsKey := &kmsiapi.KMSKey{}
-	if err := r.Client.Get(ctx, req.NamespacedName, kmsKey); err != nil {
+	if err := r.Get(ctx, req.NamespacedName, kmsKey); err != nil {
 		log.Error(err, "failed to retrieve KMSKey resource")
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
@@ -127,14 +127,14 @@ func (r *KMSKeyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 func (r *KMSKeyReconciler) patchKeyStatus(ctx context.Context, issuer *kmsiapi.KMSKey) error {
 	var latest kmsiapi.KMSKey
 
-	if err := r.Client.Get(ctx, client.ObjectKeyFromObject(issuer), &latest); err != nil {
+	if err := r.Get(ctx, client.ObjectKeyFromObject(issuer), &latest); err != nil {
 		return err
 	}
 
 	patch := client.MergeFrom(latest.DeepCopy())
 	latest.Status = issuer.Status
 
-	return r.Client.Status().Patch(ctx, &latest, patch)
+	return r.Status().Patch(ctx, &latest, patch)
 }
 
 // manageSuccess

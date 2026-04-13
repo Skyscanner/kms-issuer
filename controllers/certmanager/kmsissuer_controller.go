@@ -76,7 +76,7 @@ func (r *KMSIssuerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	// retrieve the KMSIssuer resource to reconcile.
 	issuer := &kmsiapi.KMSIssuer{}
-	if err := r.Client.Get(ctx, req.NamespacedName, issuer); err != nil {
+	if err := r.Get(ctx, req.NamespacedName, issuer); err != nil {
 		log.Error(err, "failed to retrieve KMSIssuer resource")
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}

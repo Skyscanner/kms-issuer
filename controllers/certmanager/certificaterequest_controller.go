@@ -18,9 +18,8 @@ package certmanager
 
 import (
 	"context"
-	"fmt"
-
 	"encoding/pem"
+	"fmt"
 
 	kmsiapi "github.com/Skyscanner/kms-issuer/v4/apis/certmanager/v1alpha1"
 	kmsca "github.com/Skyscanner/kms-issuer/v4/pkg/kmsca"
@@ -69,7 +68,7 @@ func (r *CertificateRequestReconciler) Reconcile(ctx context.Context, req ctrl.R
 	// Fetch the CertificateRequest resource being reconciled.
 	// Just ignore the request if the certificate request has been deleted.
 	cr := new(cmapi.CertificateRequest)
-	if err := r.Client.Get(ctx, req.NamespacedName, cr); err != nil {
+	if err := r.Get(ctx, req.NamespacedName, cr); err != nil {
 		if apierrors.IsNotFound(err) {
 			return ctrl.Result{}, nil
 		}
@@ -81,7 +80,7 @@ func (r *CertificateRequestReconciler) Reconcile(ctx context.Context, req ctrl.R
 	// Check the CertificateRequest's issuerRef and if it does not match the api
 	// group name, log a message at a debug level and stop processing.
 	if cr.Spec.IssuerRef.Group != "" && cr.Spec.IssuerRef.Group != kmsiapi.GroupVersion.Group {
-		log.V(4).Info("resource does not specify an issuerRef group name that we are responsible for", "group", cr.Spec.IssuerRef.Group) //nolint:gomnd // TODO: fix when refactoring the logger
+		log.V(4).Info("resource does not specify an issuerRef group name that we are responsible for", "group", cr.Spec.IssuerRef.Group)
 		return ctrl.Result{}, nil
 	}
 
@@ -93,7 +92,7 @@ func (r *CertificateRequestReconciler) Reconcile(ctx context.Context, req ctrl.R
 	// If the certificate data is already set then we skip this request as it
 	// has already been completed in the past.
 	if len(cr.Status.Certificate) > 0 {
-		log.V(4).Info("existing certificate data found in status, skipping already completed CertificateRequest") //nolint:gomnd // TODO: fix when refactoring the logger
+		log.V(4).Info("existing certificate data found in status, skipping already completed CertificateRequest")
 		return ctrl.Result{}, nil
 	}
 
@@ -109,7 +108,7 @@ func (r *CertificateRequestReconciler) Reconcile(ctx context.Context, req ctrl.R
 		Namespace: req.Namespace,
 		Name:      cr.Spec.IssuerRef.Name,
 	}
-	if err = r.Client.Get(ctx, issNamespaceName, &issuer); err != nil {
+	if err = r.Get(ctx, issNamespaceName, &issuer); err != nil {
 		log.Error(err, "failed to retrieve KMSIssuer resource", "namespace", req.Namespace, "name", cr.Spec.IssuerRef.Name)
 		_ = r.setStatus(ctx, cr, cmmeta.ConditionFalse, cmapi.CertificateRequestReasonPending, "Failed to retrieve KMSIssuer resource %s: %v", issNamespaceName, err)
 		return ctrl.Result{}, err

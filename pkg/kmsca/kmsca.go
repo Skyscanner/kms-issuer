@@ -83,13 +83,13 @@ func (ca *KMSCA) CreateKey(ctx context.Context, input *CreateKeyInput) (string, 
 		KeyUsage: kmstypes.KeyUsageTypeSignVerify,
 		KeySpec:  kmstypes.KeySpec(kmstypes.CustomerMasterKeySpecRsa2048),
 	}
-	if len(input.CustomerMasterKeySpec) > 0 {
+	if input.CustomerMasterKeySpec != "" {
 		keyInput.KeySpec = kmstypes.KeySpec(input.CustomerMasterKeySpec)
 	}
-	if len(input.Description) > 0 {
+	if input.Description != "" {
 		keyInput.Description = aws.String(input.Description)
 	}
-	if len(input.Policy) > 0 {
+	if input.Policy != "" {
 		keyInput.Policy = aws.String(input.Policy)
 	}
 	if len(input.Tags) > 0 {
@@ -126,7 +126,7 @@ func (ca *KMSCA) DeleteKey(ctx context.Context, input *DeleteKeyInput) error {
 		KeyId: response.KeyMetadata.KeyId,
 	}
 	if input.PendingWindowInDays > 0 {
-		deleteInput.PendingWindowInDays = aws.Int32(int32(input.PendingWindowInDays))
+		deleteInput.PendingWindowInDays = aws.Int32(int32(input.PendingWindowInDays)) //nolint:gosec // G115: value is bounded to 7-30 by CRD validation
 	}
 
 	_, err = ca.Client.ScheduleKeyDeletion(ctx, deleteInput)

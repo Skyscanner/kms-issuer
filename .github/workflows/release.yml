@@ -6,42 +6,70 @@ on:
       - published
 
 jobs:
-  release:
+  docker:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
-      - uses: actions/checkout@v3.1.0
-
-      - name: Publish Helm charts
-        uses: stefanprodan/helm-gh-pages@master
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v5
         with:
-          # list of Docker images to use as base name for tags
           images: |
             ghcr.io/skyscanner/kms-issuer
-          # generate Docker tags based on the following events/attributes
           tags: |
             type=semver,pattern={{raw}}
 
       - name: Login to GitHub Packages
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@v2.1.0
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and publish a docker image
-        uses: docker/build-push-action@v4.0.0
+        uses: docker/build-push-action@v6
         with:
           platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  helm:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Helm
+        uses: Azure/setup-helm@v4
+
+      - name: Package Helm chart
+        run: |
+          helm package charts/kms-issuer -d /tmp/helm-pkg
+
+      - name: Publish Helm chart to gh-pages
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+          git fetch origin gh-pages:gh-pages 2>/dev/null || true
+          git stash --include-untracked
+          git checkout gh-pages 2>/dev/null || git checkout --orphan gh-pages
+
+          # Copy packaged chart and rebuild index
+          cp /tmp/helm-pkg/*.tgz .
+          helm repo index . --url https://skyscanner.github.io/kms-issuer/
+
+          git add .
+          git commit -m "Publish Helm chart for ${{ github.event.release.tag_name }}" || true
+          git push origin gh-pages

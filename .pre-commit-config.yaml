@@ -11,10 +11,11 @@ repos:
       - id: check-yaml
         args:
           - --allow-multiple-documents
+        exclude: 'charts/.*'
       - id: end-of-file-fixer
       - id: trailing-whitespace
   - repo: https://github.com/golangci/golangci-lint
-    rev: v1.41.1
+    rev: v2.1.6
     hooks:
       - id: golangci-lint
         args:

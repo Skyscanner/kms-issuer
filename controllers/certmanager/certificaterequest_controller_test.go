@@ -18,19 +18,23 @@ package certmanager
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
 	"net"
+	"net/url"
 	"testing"
 	"time"
 
 	kmsiapi "github.com/Skyscanner/kms-issuer/v4/apis/certmanager/v1alpha1"
-	apiutil "github.com/jetstack/cert-manager/pkg/api/util"
-	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
-	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
+	apiutil "github.com/cert-manager/cert-manager/pkg/api/util"
+	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
+	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 
 	"github.com/Skyscanner/kms-issuer/v4/pkg/kmsca"
-	"github.com/jetstack/cert-manager/test/e2e/util"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -87,12 +91,12 @@ var _ = Context("CertificateRequestReconciler", func() {
 				[]byte{1, 1, 1, 1},
 			}
 			exampleURIs := []string{"spiffe://foo.foo.example.net", "spiffe://foo.bar.example.net"}
-			cr, _, err := util.NewCertManagerBasicCertificateRequest( //nolint:staticcheck // TODO: fixed when refactored
+			cr, err := newCertificateRequest(
 				crKey.Name, issuerKey.Name, "KMSIssuer",
 				&metav1.Duration{
 					Duration: time.Hour * 24 * 90,
 				},
-				exampleDNSNames, exampleIPAddresses, exampleURIs, x509.RSA,
+				exampleDNSNames, exampleIPAddresses, exampleURIs,
 			)
 			cr.ObjectMeta.Namespace = crKey.Namespace
 			cr.Spec.IssuerRef.Group = kmsiapi.GroupVersion.Group
@@ -307,7 +311,8 @@ func TestRequestShouldBeProcessed(t *testing.T) {
 			}
 
 			fclient := fakeclient.NewClientBuilder().
-				WithRuntimeObjects(request).
+				WithObjects(request).
+				WithStatusSubresource(request).
 				WithScheme(scheme).
 				Build()
 
@@ -365,4 +370,45 @@ func TestRequestShouldBeProcessed(t *testing.T) {
 
 func strP(s string) *string {
 	return &s
+}
+
+// newCertificateRequest creates a CertificateRequest with a generated CSR.
+func newCertificateRequest(name, issuerName, issuerKind string, duration *metav1.Duration, dnsNames []string, ips []net.IP, uriStrs []string) (*cmapi.CertificateRequest, error) {
+	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		return nil, err
+	}
+	var uris []*url.URL
+	for _, u := range uriStrs {
+		parsed, parseErr := url.Parse(u)
+		if parseErr != nil {
+			return nil, parseErr
+		}
+		uris = append(uris, parsed)
+	}
+	template := &x509.CertificateRequest{
+		Subject:            pkix.Name{CommonName: name},
+		DNSNames:           dnsNames,
+		IPAddresses:        ips,
+		URIs:               uris,
+		SignatureAlgorithm: x509.SHA256WithRSA,
+	}
+	csrBytes, err := x509.CreateCertificateRequest(rand.Reader, template, key)
+	if err != nil {
+		return nil, err
+	}
+	csrPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE REQUEST", Bytes: csrBytes})
+	return &cmapi.CertificateRequest{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: cmapi.CertificateRequestSpec{
+			Request:  csrPEM,
+			Duration: duration,
+			IssuerRef: cmmeta.ObjectReference{
+				Name: issuerName,
+				Kind: issuerKind,
+			},
+		},
+	}, nil
 }

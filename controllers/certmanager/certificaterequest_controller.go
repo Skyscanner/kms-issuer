@@ -24,11 +24,11 @@ import (
 
 	kmsiapi "github.com/Skyscanner/kms-issuer/v4/apis/certmanager/v1alpha1"
 	kmsca "github.com/Skyscanner/kms-issuer/v4/pkg/kmsca"
+	apiutil "github.com/cert-manager/cert-manager/pkg/api/util"
+	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
+	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
+	pkiutil "github.com/cert-manager/cert-manager/pkg/util/pki"
 	"github.com/go-logr/logr"
-	apiutil "github.com/jetstack/cert-manager/pkg/api/util"
-	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
-	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
-	pkiutil "github.com/jetstack/cert-manager/pkg/util/pki"
 	core "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -124,7 +124,7 @@ func (r *CertificateRequestReconciler) Reconcile(ctx context.Context, req ctrl.R
 	}
 
 	// Sign CertificateRequest
-	cert, err := pkiutil.GenerateTemplateFromCertificateRequest(cr)
+	cert, err := pkiutil.CertificateTemplateFromCertificateRequest(cr)
 	if err != nil {
 		log.Error(err, "failed to decode certificate request")
 		return ctrl.Result{}, r.setStatus(ctx, cr, cmmeta.ConditionFalse, cmapi.CertificateRequestReasonFailed, "Failed to decode certificate request: %v", err)
@@ -220,8 +220,7 @@ func (r *CertificateRequestReconciler) requestShouldBeProcessed(ctx context.Cont
 			cr.Status.FailureTime = &nowTime
 		}
 
-		message := "The CertificateRequest was denied by an approval controller"
-		return false, r.setStatus(ctx, cr, cmmeta.ConditionFalse, cmapi.CertificateRequestReasonDenied, message)
+		return false, r.setStatus(ctx, cr, cmmeta.ConditionFalse, cmapi.CertificateRequestReasonDenied, "The CertificateRequest was denied by an approval controller")
 	}
 
 	if r.CheckApprovedCondition {

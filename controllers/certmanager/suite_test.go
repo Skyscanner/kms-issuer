@@ -22,7 +22,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/utils/clock"
@@ -35,7 +35,7 @@ import (
 	kmsca "github.com/Skyscanner/kms-issuer/v4/pkg/kmsca"
 	mocks "github.com/Skyscanner/kms-issuer/v4/pkg/kmsmock"
 
-	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
+	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 
 	certmanagerv1alpha1 "github.com/Skyscanner/kms-issuer/v4/apis/certmanager/v1alpha1"
 	// +kubebuilder:scaffold:imports
@@ -114,8 +114,7 @@ var _ = BeforeSuite(func() {
 		err = k8sManager.Start(ctx)
 		Expect(err).ToNot(HaveOccurred(), "failed to run manager")
 	}()
-
-}, 60)
+})
 
 var _ = AfterSuite(func() {
 	cancel()

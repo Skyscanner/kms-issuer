@@ -64,7 +64,13 @@ jobs:
 
           git fetch origin gh-pages:gh-pages 2>/dev/null || true
           git stash --include-untracked
-          git checkout gh-pages 2>/dev/null || git checkout --orphan gh-pages
+
+          if git checkout gh-pages 2>/dev/null; then
+            echo "Checked out existing gh-pages branch"
+          else
+            git checkout --orphan gh-pages
+            git rm -rf .
+          fi
 
           # Copy packaged chart and rebuild index
           cp /tmp/helm-pkg/*.tgz .

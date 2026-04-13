@@ -9,7 +9,7 @@ KMS issuer is a [cert-manager](https://cert-manager.io/) Certificate Request con
 
 ## Getting started
 
-In this guide, we assume that you have a [Kubernetes](https://kubernetes.io/) environment with a cert-manager version supporting CertificateRequest issuers, cert-manager v0.11.0 or higher.
+In this guide, we assume that you have a [Kubernetes](https://kubernetes.io/) environment with [cert-manager](https://cert-manager.io/) v1.17 or higher installed.
 
 For any details on Cert-Manager, check the [official documentation](https://cert-manager.io/docs/usage/).
 
@@ -30,10 +30,10 @@ helm upgrade --install kms-issuer kms-issuer/kms-issuer --namespace kms-issuer-s
 
 ### Usage
 
-1. Install [cert-manager](https://cert-manager.io/docs/installation/). The operator has been tested with version v0.15.1
+1. Install [cert-manager](https://cert-manager.io/docs/installation/). The operator has been tested with version v1.17.2
 
 ```bash
-kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v0.15.1/cert-manager.yaml
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.17.2/cert-manager.yaml
 ```
 
 2. Install and run the kms-issuer
@@ -184,7 +184,7 @@ A KMSIssuer resource configures a new [Cert-Manager external issuer](https://cer
 | `spec.duration`    | duration | Certificate default Duration. (optional, default=26280h aka 3 years)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `spec.renewBefore` | duration | The amount of time before the certificate’s notAfter time that the issuer will begin to attempt to renew the certificate. If this value is greater than the total duration of the certificate (i.e. notAfter - notBefore), it will be automatically renewed 2/3rds of the way through the certificate’s duration. <br> <br> The `NotBefore` field on the certificate is set to the current time rounded down by the renewal interval. For example, if the certificate is renewed every hour, the `NotBefore` field is set to the beggining of the hour. If the certificate is renewed every day, the `NotBefore` field is set to the beggining of the day. This allows the generation of consistent certificates regardless of when it has been generated during the renewal period, or recreate the same certificate after a backup/restore of your kubernetes cluster. For more details on the computation, check the [time.Truncate](https://golang.org/pkg/time/#Time.Truncate) function. |
 
-[kubernetes-meta]: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.19/#objectmeta-v1-meta
+[kubernetes-meta]: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#objectmeta-v1-meta
 
 ## Disable Approval Check
 

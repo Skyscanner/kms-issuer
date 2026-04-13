@@ -21,16 +21,15 @@ import (
 	"crypto/rand"
 	"crypto/x509"
 	"crypto/x509/pkix"
-
-	mocks "github.com/Skyscanner/kms-issuer/v4/pkg/kmsmock"
-	"github.com/Skyscanner/kms-issuer/v4/pkg/signer"
-	"github.com/aws/aws-sdk-go-v2/service/kms"
-
 	"math/big"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/kms"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+
+	mocks "github.com/Skyscanner/kms-issuer/v4/pkg/kmsmock"
+	"github.com/Skyscanner/kms-issuer/v4/pkg/signer"
 )
 
 var _ = Context("Signer", func() {

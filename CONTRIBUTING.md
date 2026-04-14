@@ -42,7 +42,7 @@ If you are adding a new file it should have a header like this:
 - [`kustomize`](https://kustomize.io/)
 - [`kind`](https://kind.sigs.k8s.io/) - for testing
 - [`golangci-lint`](https://golangci-lint.run/)
-- [`travis CLI`](https://github.com/travis-ci/travis.rb#readme) - for validating changes to `.travis.yml` config file
+- [`helm-docs`](https://github.com/norwoodj/helm-docs) - for generating Helm chart documentation
 - [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 
 ## Testing

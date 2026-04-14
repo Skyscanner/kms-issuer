@@ -28,12 +28,12 @@ import (
 	"testing"
 	"time"
 
-	kmsiapi "github.com/Skyscanner/kms-issuer/v4/apis/certmanager/v1alpha1"
 	apiutil "github.com/cert-manager/cert-manager/pkg/api/util"
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 
-	"github.com/Skyscanner/kms-issuer/v4/pkg/kmsca"
+	kmsiapi "github.com/Skyscanner/kms-issuer/v4/apis/certmanager/v1alpha1"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
@@ -45,6 +45,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
+
+	"github.com/Skyscanner/kms-issuer/v4/pkg/kmsca"
 )
 
 var _ = Context("CertificateRequestReconciler", func() {
@@ -98,7 +100,7 @@ var _ = Context("CertificateRequestReconciler", func() {
 				},
 				exampleDNSNames, exampleIPAddresses, exampleURIs,
 			)
-			cr.ObjectMeta.Namespace = crKey.Namespace
+			cr.Namespace = crKey.Namespace
 			cr.Spec.IssuerRef.Group = kmsiapi.GroupVersion.Group
 			Expect(err).To(BeNil())
 			Expect(k8sClient.Create(context.Background(), cr)).Should(Succeed(), "failed to create test CertificateRequest resource")

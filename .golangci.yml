@@ -9,9 +9,10 @@ formatters:
     - goimports
   settings:
     goimports:
-      local-prefixes: github.com/Skyscanner/kms-issuer
+      local-prefixes:
+        - github.com/Skyscanner/kms-issuer
 linters:
-  disable-all: true
+  default: none
   enable:
     - bodyclose
     - dogsled
@@ -58,12 +59,12 @@ linters:
     govet:
       enable:
         - shadow
-issues:
-  exclude-dirs:
-    - .git
-    - deploy
-    - config
-    - hack
-  exclude-rules:
-    - path: _test\.go
-      text: "dot-imports"
+  exclusions:
+    paths:
+      - .git
+      - deploy
+      - config
+      - hack
+    rules:
+      - path: _test\.go
+        text: "dot-imports"

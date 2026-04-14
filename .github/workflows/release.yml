@@ -44,7 +44,8 @@ jobs:
   helm:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -53,29 +54,10 @@ jobs:
       - name: Setup Helm
         uses: Azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2 # v5.0.0
 
-      - name: Package Helm chart
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+
+      - name: Package and push Helm chart
         run: |
-          helm package charts/kms-issuer -d /tmp/helm-pkg
-
-      - name: Publish Helm chart to gh-pages
-        run: |
-          git config user.name "$GITHUB_ACTOR"
-          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
-
-          git fetch origin gh-pages:gh-pages 2>/dev/null || true
-          git stash --include-untracked
-
-          if git checkout gh-pages 2>/dev/null; then
-            echo "Checked out existing gh-pages branch"
-          else
-            git checkout --orphan gh-pages
-            git rm -rf .
-          fi
-
-          # Copy packaged chart and rebuild index
-          cp /tmp/helm-pkg/*.tgz .
-          helm repo index . --url https://skyscanner.github.io/kms-issuer/
-
-          git add .
-          git commit -m "Publish Helm chart for ${{ github.event.release.tag_name }}" || true
-          git push origin gh-pages
+          helm package charts/kms-issuer
+          helm push kms-issuer-*.tgz oci://ghcr.io/skyscanner/charts

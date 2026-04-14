@@ -15,17 +15,16 @@ For any details on Cert-Manager, check the [official documentation](https://cert
 
 ## Install
 
-You can install the controller using the official helm chart:
+You can install the controller using the official Helm chart from the OCI registry:
 
 ```console
-helm repo add kms-issuer 'https://skyscanner.github.io/kms-issuer'
-helm repo update
+helm upgrade --install kms-issuer oci://ghcr.io/skyscanner/charts/kms-issuer --namespace kms-issuer-system --create-namespace
 ```
 
-To install the chart with the release name `kms-issuer`:
+To install a specific version:
 
 ```console
-helm upgrade --install kms-issuer kms-issuer/kms-issuer --namespace kms-issuer-system --create-namespace
+helm upgrade --install kms-issuer oci://ghcr.io/skyscanner/charts/kms-issuer --version <version> --namespace kms-issuer-system --create-namespace
 ```
 
 ### Usage

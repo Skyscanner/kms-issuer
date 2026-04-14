@@ -25,8 +25,6 @@ import (
 	"fmt"
 	"time"
 
-	kmsiapi "github.com/Skyscanner/kms-issuer/v4/apis/certmanager/v1alpha1"
-	"github.com/Skyscanner/kms-issuer/v4/pkg/kmsca"
 	"github.com/go-logr/logr"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -35,6 +33,9 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+
+	kmsiapi "github.com/Skyscanner/kms-issuer/v4/apis/certmanager/v1alpha1"
+	"github.com/Skyscanner/kms-issuer/v4/pkg/kmsca"
 )
 
 const (
@@ -76,7 +77,7 @@ func (r *KMSIssuerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	// retrieve the KMSIssuer resource to reconcile.
 	issuer := &kmsiapi.KMSIssuer{}
-	if err := r.Client.Get(ctx, req.NamespacedName, issuer); err != nil {
+	if err := r.Get(ctx, req.NamespacedName, issuer); err != nil {
 		log.Error(err, "failed to retrieve KMSIssuer resource")
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
@@ -115,7 +116,7 @@ func (r *KMSIssuerReconciler) setIssuerDefaultValues(issuer *kmsiapi.KMSIssuer) 
 		log.Info("setting default duration", "duration", defaultCertDuration)
 		issuer.Spec.Duration = &metav1.Duration{Duration: defaultCertDuration}
 	}
-	renewBefore := time.Duration(float64(issuer.Spec.Duration.Duration.Nanoseconds()) * defaultCertRenewalRatio)
+	renewBefore := time.Duration(float64(issuer.Spec.Duration.Nanoseconds()) * defaultCertRenewalRatio)
 	if issuer.Spec.RenewBefore == nil {
 		log.Info("setting default", "RenewBefore", renewBefore)
 		issuer.Spec.RenewBefore = &metav1.Duration{
@@ -134,7 +135,7 @@ func (r *KMSIssuerReconciler) setIssuerDefaultValues(issuer *kmsiapi.KMSIssuer) 
 func (r *KMSIssuerReconciler) patchIssuerStatus(ctx context.Context, issuer *kmsiapi.KMSIssuer) error {
 	var latest kmsiapi.KMSIssuer
 
-	if err := r.Client.Get(ctx, client.ObjectKeyFromObject(issuer), &latest); err != nil {
+	if err := r.Get(ctx, client.ObjectKeyFromObject(issuer), &latest); err != nil {
 		return err
 	}
 

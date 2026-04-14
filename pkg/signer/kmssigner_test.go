@@ -22,9 +22,10 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 
+	"github.com/aws/aws-sdk-go-v2/service/kms"
+
 	mocks "github.com/Skyscanner/kms-issuer/v4/pkg/kmsmock"
 	"github.com/Skyscanner/kms-issuer/v4/pkg/signer"
-	"github.com/aws/aws-sdk-go-v2/service/kms"
 
 	"math/big"
 	"time"

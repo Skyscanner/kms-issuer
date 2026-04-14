@@ -99,12 +99,12 @@ func main() {
 	awsLoadConfigOpts := []func(*config.LoadOptions) error{}
 	if localAWSEndpoint != "" {
 		setupLog.Info("Using custom AWS Endpoint", "endpoint", localAWSEndpoint)
-		awsEndpointsResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-			return aws.Endpoint{PartitionID: "aws", URL: localAWSEndpoint, SigningRegion: "eu-west-1"}, nil
+		awsEndpointsResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) { //nolint:staticcheck // SA1019: deprecated but functional, migration to per-service resolver deferred
+			return aws.Endpoint{PartitionID: "aws", URL: localAWSEndpoint, SigningRegion: "eu-west-1"}, nil //nolint:staticcheck // SA1019: deprecated but functional, migration to per-service resolver deferred
 		})
 		awsLoadConfigOpts = append(
 			awsLoadConfigOpts,
-			config.WithEndpointResolverWithOptions(awsEndpointsResolver),
+			config.WithEndpointResolverWithOptions(awsEndpointsResolver), //nolint:staticcheck // SA1019: deprecated but functional, migration to per-service resolver deferred
 			config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider("test", "test", "test")),
 			config.WithRegion("eu-west-1"),
 		)

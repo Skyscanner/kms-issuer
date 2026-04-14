@@ -24,12 +24,13 @@ import (
 
 	"crypto/sha256"
 
-	mocks "github.com/Skyscanner/kms-issuer/v4/pkg/kmsmock"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	kmstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+
+	mocks "github.com/Skyscanner/kms-issuer/v4/pkg/kmsmock"
 )
 
 var _ = Context("KMSMock", func() {

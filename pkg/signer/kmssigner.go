@@ -22,9 +22,10 @@ import (
 	"crypto/x509"
 	"io"
 
-	"github.com/Skyscanner/kms-issuer/v4/pkg/interfaces"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	kmstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
+
+	"github.com/Skyscanner/kms-issuer/v4/pkg/interfaces"
 )
 
 // KMSSigner implements the crypto/Signer interface that can be used for signing operations

@@ -22,11 +22,12 @@ import (
 
 	kmsiapi "github.com/Skyscanner/kms-issuer/v4/apis/certmanager/v1alpha1"
 
-	"github.com/Skyscanner/kms-issuer/v4/pkg/kmsca"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/Skyscanner/kms-issuer/v4/pkg/kmsca"
 )
 
 func WaitIssuerReady(key client.ObjectKey) *kmsiapi.KMSIssuer {

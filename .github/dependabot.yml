@@ -1,11 +1,57 @@
+# Note: Dependabot security updates (driven by GitHub security advisories)
+# bypass the cooldown and other settings configured below.
 version: 2
 updates:
-  # Maintain dependencies for GitHub Actions
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "daily"
   - package-ecosystem: "gomod"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    groups:
+      skyscanner-internal:
+        patterns:
+          - "github.com/Skyscanner/*"
+      external-dependencies:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "github.com/Skyscanner/*"
+    cooldown:
+      default-days: 30
+      exclude:
+        - "github.com/Skyscanner/*"
+  - package-ecosystem: "docker"  # zizmor: ignore[dependabot-cooldown] cooldown broken for docker (dependabot-core#14414)
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+    open-pull-requests-limit: 5
+    groups:
+      skyscanner-internal:
+        patterns:
+          - "*/skyscanner/*"
+      external-dependencies:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "*/skyscanner/*"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+    open-pull-requests-limit: 5
+    groups:
+      skyscanner-internal:
+        patterns:
+          - "skyscanner/*"
+      external-dependencies:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "skyscanner/*"
+    cooldown:
+      default-days: 30
+      exclude:
+        - "skyscanner/*"
